@@ -7,8 +7,9 @@
 #
 # Tests:
 #   1. Query a non-existent property (expects PROPERTY_NOT_FOUND)
-#   2. Invoke RegisterProperty with test data (expects success or ABAC error)
+#   2. Invoke RegisterProperty with CA-enrolled registrar1 identity
 #   3. Query back the registered property
+#   4. State boundary enforcement — registrar2 (MH) tries DL property
 #
 # Usage: ./test-chaincode.sh
 # =============================================================================
@@ -30,6 +31,7 @@ ORDERER_ADDRESS="localhost:7050"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 PASS=0
@@ -41,7 +43,7 @@ fail() { echo -e "  ${RED}FAIL${NC}  $1"; FAIL=$((FAIL + 1)); }
 warn() { echo -e "  ${YELLOW}WARN${NC}  $1"; WARN=$((WARN + 1)); }
 
 # -----------------------------------------------------------------------------
-# Set peer environment for revenue org admin
+# Set peer environment for revenue org admin (cryptogen Admin — no ABAC attrs)
 # -----------------------------------------------------------------------------
 set_peer0_revenue_env() {
     export CORE_PEER_TLS_ENABLED=true
@@ -51,14 +53,53 @@ set_peer0_revenue_env() {
     export CORE_PEER_ADDRESS="localhost:7051"
 }
 
+# -----------------------------------------------------------------------------
+# Set peer environment for CA-enrolled registrar1 (role=registrar, stateCode=DL)
+# -----------------------------------------------------------------------------
+set_registrar1_env() {
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
+    export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/registrar1@revenue.bhulekhchain.dev/msp"
+    export CORE_PEER_ADDRESS="localhost:7051"
+}
+
+# -----------------------------------------------------------------------------
+# Set peer environment for CA-enrolled registrar2 (role=registrar, stateCode=MH)
+# -----------------------------------------------------------------------------
+set_registrar2_env() {
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
+    export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/registrar2@revenue.bhulekhchain.dev/msp"
+    export CORE_PEER_ADDRESS="localhost:7051"
+}
+
+# -----------------------------------------------------------------------------
+# Detect whether CA-enrolled identities are available
+# -----------------------------------------------------------------------------
+REGISTRAR1_MSP="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/registrar1@revenue.bhulekhchain.dev/msp"
+REGISTRAR2_MSP="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/registrar2@revenue.bhulekhchain.dev/msp"
+
+HAS_CA_IDENTITIES=false
+if [ -d "${REGISTRAR1_MSP}/signcerts" ] && [ "$(ls -A "${REGISTRAR1_MSP}/signcerts" 2>/dev/null)" ]; then
+    HAS_CA_IDENTITIES=true
+fi
+
 echo ""
 echo "============================================================"
 echo "  BhulekhChain — Chaincode Smoke Test"
 echo "  Channel:   ${CHANNEL_NAME}"
 echo "  Chaincode: ${CC_NAME}"
+if [ "${HAS_CA_IDENTITIES}" = true ]; then
+    echo -e "  Identity:  ${GREEN}CA-enrolled (ABAC enabled)${NC}"
+else
+    echo -e "  Identity:  ${YELLOW}cryptogen Admin (no ABAC attrs)${NC}"
+fi
 echo "============================================================"
 echo ""
 
+# Use cryptogen Admin for query-only tests (Test 1)
 set_peer0_revenue_env
 
 # -----------------------------------------------------------------------------
@@ -89,11 +130,18 @@ fi
 
 # -----------------------------------------------------------------------------
 # Test 2: Invoke RegisterProperty with test data
-# This may fail with ABAC error if cryptogen certs lack role attributes.
-# An ABAC error still confirms the chaincode is running and processing logic.
+# Uses CA-enrolled registrar1 if available, falls back to cryptogen Admin.
 # -----------------------------------------------------------------------------
 echo ""
 echo "--- Test 2: Invoke RegisterProperty ---"
+
+if [ "${HAS_CA_IDENTITIES}" = true ]; then
+    echo -e "  ${BLUE}Using CA-enrolled registrar1 (role=registrar, stateCode=DL)${NC}"
+    set_registrar1_env
+else
+    echo -e "  ${YELLOW}Using cryptogen Admin (ABAC errors expected)${NC}"
+    set_peer0_revenue_env
+fi
 
 TEST_PROPERTY_ID="DL-001-001-001-101-0"
 TEST_AADHAAR_HASH="sha256:a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
@@ -219,12 +267,121 @@ if [ $INVOKE_RC -eq 0 ]; then
     else
         fail "GetProperty query failed: ${VERIFY_RESULT}"
     fi
+
+    # -------------------------------------------------------------------------
+    # Test 4: State boundary enforcement
+    # registrar2 has stateCode=MH — should NOT be able to register DL property
+    # -------------------------------------------------------------------------
+    if [ "${HAS_CA_IDENTITIES}" = true ] && \
+       [ -d "${REGISTRAR2_MSP}/signcerts" ] && \
+       [ "$(ls -A "${REGISTRAR2_MSP}/signcerts" 2>/dev/null)" ]; then
+
+        echo ""
+        echo "--- Test 4: State boundary enforcement (registrar2/MH -> DL property) ---"
+
+        set_registrar2_env
+
+        TEST_CROSS_STATE_ID="DL-001-001-001-999-0"
+
+        CROSS_STATE_JSON=$(cat <<EOJSON2
+{
+  "propertyId": "${TEST_CROSS_STATE_ID}",
+  "surveyNumber": "999",
+  "subSurveyNumber": "",
+  "location": {
+    "stateCode": "DL",
+    "stateName": "Delhi",
+    "districtCode": "001",
+    "districtName": "New Delhi",
+    "tehsilCode": "001",
+    "tehsilName": "Chanakyapuri",
+    "villageCode": "001",
+    "villageName": "Test Village 2",
+    "pinCode": "110021"
+  },
+  "area": {
+    "value": 200.0,
+    "unit": "SQ_METERS",
+    "localValue": 0.049,
+    "localUnit": "ACRES"
+  },
+  "boundaries": {
+    "north": "Plot 998",
+    "south": "Side Road",
+    "east": "Plot 1000",
+    "west": "Garden"
+  },
+  "currentOwner": {
+    "ownerType": "INDIVIDUAL",
+    "owners": [{
+      "aadhaarHash": "sha256:b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+      "name": "Suresh Patil",
+      "fatherName": "Ramesh Patil",
+      "sharePercentage": 100,
+      "isMinor": false
+    }],
+    "ownershipType": "FREEHOLD",
+    "acquisitionType": "PURCHASE",
+    "acquisitionDate": "2021-06-01"
+  },
+  "landUse": "RESIDENTIAL",
+  "landClassification": "URBAN",
+  "taxInfo": {
+    "annualLandRevenue": 300000,
+    "lastPaidDate": "2025-03-31",
+    "paidUpToYear": "2024-25"
+  },
+  "registrationInfo": {
+    "registrationNumber": "REG-DL-2021-005678",
+    "bookNumber": "BOOK-I-2021",
+    "subRegistrarOffice": "SRO New Delhi",
+    "registrationDate": "2021-06-01"
+  },
+  "provenance": {
+    "sequence": 1
+  }
+}
+EOJSON2
+)
+
+        set +e
+        CROSS_RESULT=$(peer chaincode invoke \
+            -o "${ORDERER_ADDRESS}" \
+            -C "${CHANNEL_NAME}" \
+            -n "${CC_NAME}" \
+            -c "{\"function\":\"RegisterProperty\",\"Args\":[$(echo "${CROSS_STATE_JSON}" | jq -c . | jq -Rs .)]}" \
+            --tls \
+            --cafile "${ORDERER_CA}" \
+            --peerAddresses "localhost:7051" \
+            --tlsRootCertFiles "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt" \
+            --waitForEvent \
+            2>&1)
+        CROSS_RC=$?
+        set -e
+
+        if [ $CROSS_RC -ne 0 ] && echo "${CROSS_RESULT}" | grep -q "STATE_MISMATCH"; then
+            pass "State boundary enforced: MH registrar rejected for DL property (STATE_MISMATCH)"
+        elif [ $CROSS_RC -ne 0 ]; then
+            # Any rejection is acceptable — the key is that it did NOT succeed
+            if echo "${CROSS_RESULT}" | grep -q "ACCESS_DENIED\|AUTHORIZATION_FAILED"; then
+                pass "State boundary enforced: cross-state registration rejected"
+            else
+                fail "Cross-state registration failed with unexpected error: ${CROSS_RESULT}"
+            fi
+        else
+            fail "Cross-state registration should have been rejected but succeeded"
+        fi
+    fi
+
 elif echo "${INVOKE_RESULT}" | grep -q "AUTHORIZATION_FAILED\|ACCESS_DENIED\|does not have attribute\|requireRole\|ABAC"; then
     warn "RegisterProperty failed due to ABAC (role check) — this is expected with cryptogen certs"
-    warn "Chaincode IS deployed and processing requests; set up Fabric CA with role attributes for full test"
+    warn "Chaincode IS deployed and processing requests; run './network.sh register' to enroll CA identities"
     echo ""
     echo "--- Test 3: Skipped (registration did not succeed) ---"
     warn "Skipping GetProperty verification"
+    echo ""
+    echo "--- Test 4: Skipped (no CA-enrolled identities) ---"
+    warn "Skipping state boundary test"
 else
     fail "RegisterProperty invoke failed unexpectedly: ${INVOKE_RESULT}"
 fi

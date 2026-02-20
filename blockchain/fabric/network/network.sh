@@ -5,13 +5,14 @@
 # Single entry point to manage the dev Fabric network lifecycle.
 #
 # Usage:
-#   ./network.sh up       — Generate crypto, start containers, create channel,
-#                            join peers, deploy chaincode
+#   ./network.sh up       — Generate crypto, start containers, register users,
+#                            create channel, join peers, deploy chaincode
 #   ./network.sh down     — Stop all containers and clean generated artifacts
 #   ./network.sh restart  — Down then up
 #   ./network.sh generate — Generate crypto material and channel artifacts only
 #   ./network.sh channel  — Create channel and join peers (network must be running)
 #   ./network.sh deploy   — Deploy land-registry chaincode (channel must exist)
+#   ./network.sh register — Register/enroll users with ABAC attributes via Fabric CA
 #   ./network.sh test     — Run smoke test against deployed chaincode
 #   ./network.sh status   — Show container status
 # =============================================================================
@@ -48,7 +49,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 check_prerequisites() {
     local missing=0
 
-    for cmd in docker cryptogen configtxgen peer; do
+    for cmd in docker cryptogen configtxgen peer fabric-ca-client; do
         if ! command -v "$cmd" &> /dev/null; then
             log_error "$cmd is not installed or not in PATH."
             missing=1
@@ -81,6 +82,21 @@ generate_crypto() {
     mkdir -p "${CRYPTO_DIR}"
     cd "${NETWORK_DIR}"
     cryptogen generate --config=crypto-config.yaml --output=crypto-material
+
+    # Fix CA private key names: cryptogen uses random hex, Fabric CA expects priv_sk
+    for ca_dir in \
+        "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/ca" \
+        "${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/ca"; do
+        if [ ! -f "${ca_dir}/priv_sk" ]; then
+            local sk_file
+            sk_file=$(ls "${ca_dir}"/*_sk 2>/dev/null | head -1)
+            if [ -n "${sk_file}" ]; then
+                cp "${sk_file}" "${ca_dir}/priv_sk"
+                log_info "Copied $(basename "${sk_file}") -> priv_sk in $(basename "$(dirname "${ca_dir}")")"
+            fi
+        fi
+    done
+
     log_ok "Crypto material generated at ${CRYPTO_DIR}"
 }
 
@@ -206,6 +222,23 @@ deploy_chaincode() {
 }
 
 # -----------------------------------------------------------------------------
+# Register users with ABAC attributes via Fabric CA
+# -----------------------------------------------------------------------------
+register_users() {
+    log_info "Registering users with ABAC attributes via Fabric CA..."
+
+    cd "${SCRIPTS_DIR}"
+
+    if [ ! -f register-users.sh ]; then
+        log_error "register-users.sh not found in ${SCRIPTS_DIR}"
+        exit 1
+    fi
+
+    bash register-users.sh
+    log_ok "Users registered with ABAC attributes"
+}
+
+# -----------------------------------------------------------------------------
 # Run smoke test
 # -----------------------------------------------------------------------------
 run_test() {
@@ -243,6 +276,11 @@ network_down() {
     if [ -d "${CHANNEL_ARTIFACTS_DIR}" ]; then
         rm -rf "${CHANNEL_ARTIFACTS_DIR}"
         log_ok "Channel artifacts removed"
+    fi
+
+    if [ -d "${NETWORK_DIR}/ca-client" ]; then
+        rm -rf "${NETWORK_DIR}/ca-client"
+        log_ok "CA client material removed"
     fi
 
     # Remove chaincode docker images
@@ -283,6 +321,7 @@ print_usage() {
     echo "  generate — Generate crypto material and channel artifacts"
     echo "  channel  — Create channel and join peers"
     echo "  deploy   — Deploy land-registry chaincode"
+    echo "  register — Register users with ABAC attributes via Fabric CA"
     echo "  test     — Run chaincode smoke test"
     echo "  status   — Show network status"
     echo ""
@@ -309,6 +348,7 @@ case "${COMMAND}" in
         generate_crypto
         generate_channel_artifacts
         start_containers
+        register_users
         setup_channel
         deploy_chaincode "land-registry"
 
@@ -320,6 +360,8 @@ case "${COMMAND}" in
         echo "  Orderer:              localhost:7050"
         echo "  peer0.revenue:        localhost:7051"
         echo "  peer0.bank:           localhost:9051"
+        echo "  CA (revenue):         https://localhost:7054"
+        echo "  CA (bank):            https://localhost:8054"
         echo "  CouchDB (revenue):    http://localhost:5984/_utils"
         echo "  CouchDB (bank):       http://localhost:7984/_utils"
         echo "  Fabric Explorer:      http://localhost:8080"
@@ -337,6 +379,7 @@ case "${COMMAND}" in
         generate_crypto
         generate_channel_artifacts
         start_containers
+        register_users
         setup_channel
         deploy_chaincode "land-registry"
         echo ""
@@ -353,6 +396,9 @@ case "${COMMAND}" in
         ;;
     deploy)
         deploy_chaincode "${1:-land-registry}"
+        ;;
+    register)
+        register_users
         ;;
     test)
         run_test

@@ -73,6 +73,7 @@ docker-compose.override.yml
 # Fabric crypto material (generated)
 blockchain/fabric/network/crypto-material/
 blockchain/fabric/network/channel-artifacts/
+blockchain/fabric/network/ca-client/
 
 # Fabric binaries (downloaded by install-fabric.sh)
 bin/
