@@ -15,6 +15,8 @@ function AadhaarInput({
   onChange: (val: string) => void;
   disabled: boolean;
 }) {
+  const [focused, setFocused] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '');
     if (raw.length <= 12) {
@@ -22,7 +24,15 @@ function AadhaarInput({
     }
   };
 
-  const formatAadhaar = (aadhaar: string): string => {
+  const formatForDisplay = (aadhaar: string): string => {
+    if (aadhaar.length <= 4) return aadhaar;
+    if (aadhaar.length <= 8) {
+      return `${aadhaar.slice(0, 4)} ${aadhaar.slice(4)}`;
+    }
+    return `${aadhaar.slice(0, 4)} ${aadhaar.slice(4, 8)} ${aadhaar.slice(8)}`;
+  };
+
+  const formatMasked = (aadhaar: string): string => {
     if (aadhaar.length <= 4) return aadhaar;
     if (aadhaar.length <= 8) {
       return `XXXX ${aadhaar.slice(4)}`;
@@ -30,7 +40,7 @@ function AadhaarInput({
     return `XXXX XXXX ${aadhaar.slice(8)}`;
   };
 
-  const displayValue = value.length > 4 ? formatAadhaar(value) : value;
+  const displayValue = focused ? formatForDisplay(value) : formatMasked(value);
 
   return (
     <div>
@@ -46,6 +56,8 @@ function AadhaarInput({
         placeholder="Enter 12-digit Aadhaar"
         value={displayValue}
         onChange={handleChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         disabled={disabled}
         maxLength={19}
         aria-describedby="aadhaar-help"

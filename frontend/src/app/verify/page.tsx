@@ -22,23 +22,6 @@ interface VerificationResult {
   district: string;
 }
 
-const MOCK_RESULT: VerificationResult = {
-  exists: true,
-  propertyId: 'PROP-MH-2024-00142',
-  surveyNumber: '123/4A',
-  status: 'ACTIVE',
-  isDisputed: false,
-  isEncumbered: true,
-  ownerHash: 'sha256:a1b2c3d4e5f6...7890abcd',
-  fabricTxId: 'fab_tx_8a7b6c5d4e3f2g1h0i9j8k7l6m5n4o3p2q1',
-  algorandVerified: true,
-  algorandTxId: 'ALGO_TX_ABC123DEF456',
-  algorandAppId: '12345678',
-  lastUpdated: '2024-12-01T10:30:00Z',
-  stateCode: 'MH',
-  district: 'Pune',
-};
-
 export default function VerifyPage() {
   const [searchType, setSearchType] = useState<'propertyId' | 'surveyNumber'>(
     'propertyId'
@@ -69,21 +52,44 @@ export default function VerifyPage() {
       setHasSearched(true);
 
       try {
-        // In production, this would call the API
-        await apiClient.get('/verify', {
-          type: searchType,
-          value: searchValue,
-          stateCode: stateCode || undefined,
-        });
-        // Using mock data for demonstration
-        if (searchValue.trim()) {
-          setResult(MOCK_RESULT);
+        const propertyId = searchValue.trim();
+        const response = await apiClient.get<{
+          success: boolean;
+          data: {
+            exists: boolean;
+            propertyId: string;
+            currentOwnerHash: string | null;
+            status: string;
+            disputeStatus: string;
+            encumbranceStatus: string;
+            lastVerifiedOnAlgorand: string | null;
+            algorandAsaId: string | null;
+          };
+        }>(`/verify/public/${encodeURIComponent(propertyId)}`);
+
+        const d = response.data;
+        if (d.exists) {
+          setResult({
+            exists: true,
+            propertyId: d.propertyId,
+            surveyNumber: '',
+            status: (d.status ?? 'ACTIVE') as PropertyStatus,
+            isDisputed: d.disputeStatus !== 'CLEAR',
+            isEncumbered: d.encumbranceStatus !== 'CLEAR',
+            ownerHash: d.currentOwnerHash ?? 'N/A',
+            fabricTxId: 'Recorded on Hyperledger Fabric',
+            algorandVerified: d.lastVerifiedOnAlgorand != null,
+            algorandTxId: d.lastVerifiedOnAlgorand,
+            algorandAppId: d.algorandAsaId,
+            lastUpdated: new Date().toISOString(),
+            stateCode: d.propertyId.split('-')[0] ?? '',
+            district: d.propertyId.split('-')[1] ?? '',
+          });
         } else {
           setResult(null);
         }
       } catch {
-        // Fallback to mock for demo
-        setResult(MOCK_RESULT);
+        setResult(null);
       } finally {
         setLoading(false);
       }
@@ -217,7 +223,7 @@ export default function VerifyPage() {
                   className="form-input"
                   placeholder={
                     searchType === 'propertyId'
-                      ? 'e.g., PROP-MH-2024-00142'
+                      ? 'e.g., DL-NDL-CNK-VJP-201-0'
                       : 'e.g., 123/4A'
                   }
                   value={searchValue}
@@ -408,20 +414,35 @@ export default function VerifyPage() {
                   </div>
                 </div>
 
-                {/* Algorand explorer link */}
-                {result.algorandVerified && result.algorandAppId && (
-                  <div className="pt-4 border-t border-gray-100">
-                    <a
-                      href={`https://testnet.algoexplorer.io/application/${result.algorandAppId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-bhulekh-blue-600 hover:underline"
-                    >
-                      View on Algorand Explorer
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
+                {/* Algorand explorer links */}
+                {result.algorandVerified && (
+                  <div className="pt-4 border-t border-gray-100 space-y-2">
+                    {result.algorandTxId && (
+                      <a
+                        href={`https://testnet.explorer.perawallet.app/tx/${result.algorandTxId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-bhulekh-blue-600 hover:underline"
+                      >
+                        View Transaction on Algorand Explorer
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    )}
+                    {result.algorandAppId && (
+                      <a
+                        href={`https://testnet.explorer.perawallet.app/application/${result.algorandAppId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-bhulekh-blue-600 hover:underline block"
+                      >
+                        View Application on Algorand Explorer
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    )}
                   </div>
                 )}
               </div>

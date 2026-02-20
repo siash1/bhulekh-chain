@@ -55,82 +55,6 @@ interface OwnershipRecord {
   isCurrent: boolean;
 }
 
-const MOCK_PROPERTY: PropertyDetail = {
-  id: 'PROP-MH-2024-00142',
-  surveyNumber: '123/4A',
-  khasraNumber: 'KH-2019-4532',
-  district: 'Pune',
-  tehsil: 'Haveli',
-  village: 'Wadgaon Sheri',
-  state: 'Maharashtra',
-  stateCode: 'MH',
-  area: '2400',
-  areaUnit: 'sq ft',
-  landType: 'Residential',
-  status: 'ACTIVE',
-  currentOwner: {
-    name: 'Rajesh Kumar Sharma',
-    aadhaarHash: 'a1b2c3...f9e8',
-    acquisitionType: 'Sale',
-    acquisitionDate: '2024-03-15',
-  },
-  encumbrances: [
-    {
-      id: 'ENC-001',
-      type: 'Mortgage',
-      holder: 'State Bank of India',
-      amount: '45,00,000',
-      startDate: '2024-04-01',
-      endDate: '2044-04-01',
-      status: 'ACTIVE',
-    },
-  ],
-  fabricTxId: 'fab_tx_8a7b6c5d4e3f2g1h0i9j8k7l6m5n4o3p2q1',
-  algorandAppId: '12345678',
-  algorandVerified: true,
-  lastVerifiedAt: '2024-12-01T10:30:00Z',
-  coordinates: [
-    [73.9355, 18.5597],
-    [73.9365, 18.5597],
-    [73.9365, 18.5607],
-    [73.9355, 18.5607],
-    [73.9355, 18.5597],
-  ],
-  createdAt: '2019-06-15T08:00:00Z',
-  updatedAt: '2024-12-01T10:30:00Z',
-};
-
-const MOCK_HISTORY: OwnershipRecord[] = [
-  {
-    ownerName: 'Rajesh Kumar Sharma',
-    acquisitionType: 'SALE',
-    date: '2024-03-15',
-    fabricTxId: 'fab_tx_8a7b6c5d4e3f2g1h',
-    isCurrent: true,
-  },
-  {
-    ownerName: 'Priya Mehta',
-    acquisitionType: 'INHERITANCE',
-    date: '2020-07-22',
-    fabricTxId: 'fab_tx_2k3l4m5n6o7p8q9r',
-    isCurrent: false,
-  },
-  {
-    ownerName: 'Late Suresh Mehta',
-    acquisitionType: 'SALE',
-    date: '2015-11-10',
-    fabricTxId: 'fab_tx_3s4t5u6v7w8x9y0z',
-    isCurrent: false,
-  },
-  {
-    ownerName: 'Maharashtra State Government',
-    acquisitionType: 'GOVERNMENT_GRANT',
-    date: '2010-01-01',
-    fabricTxId: 'fab_tx_genesis_001',
-    isCurrent: false,
-  },
-];
-
 function InfoRow({
   label,
   value,
@@ -156,8 +80,7 @@ export default function PropertyDetailPage() {
   const { isAuthenticated, user } = useAuthStore();
   const { getProperty, getHistory } = usePropertyStore();
 
-  const [property, setProperty] = useState<PropertyDetail | null>(null);
-  const [history, setHistory] = useState<OwnershipRecord[]>([]);
+  const { selectedProperty, propertyHistory } = usePropertyStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'map' | 'encumbrances'>('overview');
 
@@ -167,9 +90,6 @@ export default function PropertyDetailPage() {
       try {
         await getProperty(propertyId);
         await getHistory(propertyId);
-        // Using mock data for now
-        setProperty(MOCK_PROPERTY);
-        setHistory(MOCK_HISTORY);
       } catch {
         // Error handled by store
       } finally {
@@ -178,6 +98,9 @@ export default function PropertyDetailPage() {
     }
     fetchData();
   }, [propertyId, getProperty, getHistory]);
+
+  const property = selectedProperty as PropertyDetail | null;
+  const history = propertyHistory as OwnershipRecord[];
 
   if (loading) {
     return (
@@ -381,7 +304,7 @@ export default function PropertyDetailPage() {
               <InfoRow label="Acquisition" value={property.currentOwner.acquisitionType} />
               <InfoRow
                 label="Date"
-                value={new Date(property.currentOwner.acquisitionDate).toLocaleDateString('en-IN')}
+                value={property.currentOwner.acquisitionDate ? new Date(property.currentOwner.acquisitionDate).toLocaleDateString('en-IN') : 'N/A'}
               />
             </dl>
           </div>
@@ -419,21 +342,21 @@ export default function PropertyDetailPage() {
               />
               <InfoRow
                 label="Last Updated"
-                value={new Date(property.updatedAt).toLocaleDateString('en-IN', {
+                value={property.updatedAt ? new Date(property.updatedAt).toLocaleDateString('en-IN', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
-                })}
+                }) : 'N/A'}
               />
               <InfoRow
                 label="First Recorded"
-                value={new Date(property.createdAt).toLocaleDateString('en-IN', {
+                value={property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-IN', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
-                })}
+                }) : 'N/A'}
               />
             </dl>
           </div>

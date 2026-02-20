@@ -65,22 +65,26 @@ class AnchoringService {
     const anchorId = generateId('anc');
 
     try {
-      // Get suggested transaction parameters
+      // Build a proper ARC4 ABI method call using AtomicTransactionComposer.
+      // The TitleProofAnchor contract is an ARC4 contract — it expects the
+      // first 4 bytes of appArgs[0] to be the method selector (SHA-512/256
+      // of the method signature), with remaining args ABI-encoded.
+      const anchorMethod = new algosdk.ABIMethod({
+        name: 'anchor_state',
+        args: [
+          { name: 'state_code', type: 'string' },
+          { name: 'channel_id', type: 'string' },
+          { name: 'fabric_block_start', type: 'uint64' },
+          { name: 'fabric_block_end', type: 'uint64' },
+          { name: 'state_root', type: 'byte[]' },
+          { name: 'tx_count', type: 'uint64' },
+        ],
+        returns: { type: 'uint64' },
+      });
+
       const suggestedParams = await this.algodClient.getTransactionParams().do();
 
-      // Build application call transaction to anchor_state method
-      // The state root and metadata are passed as application arguments
-      const appArgs = [
-        new Uint8Array(Buffer.from('anchor_state')),
-        new Uint8Array(Buffer.from(stateCode)),
-        new Uint8Array(Buffer.from(channelId)),
-        algosdk.encodeUint64(blockRange.start),
-        algosdk.encodeUint64(blockRange.end),
-        new Uint8Array(Buffer.from(stateRoot, 'hex')),
-        algosdk.encodeUint64(txCount),
-      ];
-
-      // Build the note field with full anchor metadata (for indexing)
+      // Note field with full anchor metadata (for indexing by off-chain verifiers)
       const note = new Uint8Array(
         Buffer.from(
           JSON.stringify({
@@ -96,22 +100,29 @@ class AnchoringService {
         ),
       );
 
-      const txn = algosdk.makeApplicationCallTxnFromObject({
-        from: this.anchorAccount.addr,
-        appIndex: config.ALGORAND_APP_ID,
-        onComplete: algosdk.OnApplicationComplete.NoOpOC,
-        appArgs,
-        note,
+      const signer = algosdk.makeBasicAccountTransactionSigner(this.anchorAccount);
+
+      const atc = new algosdk.AtomicTransactionComposer();
+      atc.addMethodCall({
+        appID: config.ALGORAND_APP_ID,
+        method: anchorMethod,
+        methodArgs: [
+          stateCode,
+          channelId,
+          BigInt(blockRange.start),
+          BigInt(blockRange.end),
+          new Uint8Array(Buffer.from(stateRoot, 'hex')),
+          BigInt(txCount),
+        ],
+        sender: this.anchorAccount.addr,
+        signer,
         suggestedParams,
+        note,
       });
 
-      // Sign and submit
-      const signedTxn = txn.signTxn(this.anchorAccount.sk);
-      const { txId } = await this.algodClient.sendRawTransaction(signedTxn).do();
-
-      // Wait for confirmation
-      const confirmedTxn = await algosdk.waitForConfirmation(this.algodClient, txId, 4);
-      const confirmedRound = confirmedTxn['confirmed-round'] as number;
+      const result = await atc.execute(this.algodClient, 4);
+      const txId = result.txIDs[0];
+      const confirmedRound = Number(result.confirmedRound);
 
       // Save anchor record to PostgreSQL
       await prisma.algorandAnchor.create({

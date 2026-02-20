@@ -58,7 +58,8 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const resp = await response.json();
+            const data = resp.data ?? resp;
             setTokens(data.accessToken, data.refreshToken);
             headers['Authorization'] = `Bearer ${data.accessToken}`;
           } else {
@@ -119,7 +120,8 @@ async function request<T>(
         });
 
         if (refreshResponse.ok) {
-          const data = await refreshResponse.json();
+          const resp = await refreshResponse.json();
+          const data = resp.data ?? resp;
           setTokens(data.accessToken, data.refreshToken);
 
           // Retry original request with new token

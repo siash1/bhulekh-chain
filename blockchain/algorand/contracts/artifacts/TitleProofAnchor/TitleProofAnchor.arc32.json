@@ -1,0 +1,153 @@
+{
+    "hints": {
+        "initialize(address)void": {
+            "call_config": {
+                "no_op": "CALL"
+            }
+        },
+        "anchor_state(string,string,uint64,uint64,byte[],uint64)uint64": {
+            "call_config": {
+                "no_op": "CALL"
+            }
+        },
+        "get_anchor_count()uint64": {
+            "read_only": true,
+            "call_config": {
+                "no_op": "CALL"
+            }
+        },
+        "rotate_authority(address)void": {
+            "call_config": {
+                "no_op": "CALL"
+            }
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAwIDEgMiA4CiAgICBieXRlY2Jsb2NrICJhbmNob3JfYXV0aG9yaXR5IiAidG90YWxfYW5jaG9ycyIgMHggImxhc3RfYW5jaG9yX3JvdW5kIiAweDE1MWY3Yzc1CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6NDAKICAgIC8vIHNlbGYuYW5jaG9yX2F1dGhvcml0eSA9IEdsb2JhbFN0YXRlKEJ5dGVzKGIiIikpCiAgICBieXRlY18wIC8vICJhbmNob3JfYXV0aG9yaXR5IgogICAgYnl0ZWNfMiAvLyAweAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIGNvbnRyYWN0cy90aXRsZV9wcm9vZi5weTo0MQogICAgLy8gc2VsZi50b3RhbF9hbmNob3JzID0gR2xvYmFsU3RhdGUoVUludDY0KDApKQogICAgYnl0ZWNfMSAvLyAidG90YWxfYW5jaG9ycyIKICAgIGludGNfMCAvLyAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjQyCiAgICAvLyBzZWxmLmxhc3RfYW5jaG9yX3JvdW5kID0gR2xvYmFsU3RhdGUoVUludDY0KDApKQogICAgYnl0ZWNfMyAvLyAibGFzdF9hbmNob3Jfcm91bmQiCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKCm1haW5fYWZ0ZXJfaWZfZWxzZUAyOgogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjIyCiAgICAvLyBjbGFzcyBUaXRsZVByb29mQW5jaG9yKEFSQzRDb250cmFjdCk6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogbWFpbl9fX2FsZ29weV9kZWZhdWx0X2NyZWF0ZUAxMwogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0CiAgICBwdXNoYnl0ZXNzIDB4ZWUxYzcxNTYgMHhkZGFmYWZiMiAweGIyNzViNTM5IDB4MGYzODdhMTQgLy8gbWV0aG9kICJpbml0aWFsaXplKGFkZHJlc3Mpdm9pZCIsIG1ldGhvZCAiYW5jaG9yX3N0YXRlKHN0cmluZyxzdHJpbmcsdWludDY0LHVpbnQ2NCxieXRlW10sdWludDY0KXVpbnQ2NCIsIG1ldGhvZCAiZ2V0X2FuY2hvcl9jb3VudCgpdWludDY0IiwgbWV0aG9kICJyb3RhdGVfYXV0aG9yaXR5KGFkZHJlc3Mpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIGluaXRpYWxpemUgYW5jaG9yX3N0YXRlIGdldF9hbmNob3JfY291bnQgcm90YXRlX2F1dGhvcml0eQogICAgZXJyCgptYWluX19fYWxnb3B5X2RlZmF1bHRfY3JlYXRlQDEzOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgICEKICAgICYmCiAgICByZXR1cm4KCgovLyBjb250cmFjdHMudGl0bGVfcHJvb2YuVGl0bGVQcm9vZkFuY2hvci5pbml0aWFsaXplW3JvdXRpbmddKCkgLT4gdm9pZDoKaW5pdGlhbGl6ZToKICAgIC8vIGNvbnRyYWN0cy90aXRsZV9wcm9vZi5weTo0NAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGxlbgogICAgcHVzaGludCAzMgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5zdGF0aWNfYXJyYXk8YXJjNC51aW50OCwgMzI+CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6NTgKICAgIC8vIGFzc2VydCBUeG4uc2VuZGVyID09IG9wLkdsb2JhbC5jcmVhdG9yX2FkZHJlc3MsICJPbmx5IGNyZWF0b3IgY2FuIGluaXRpYWxpemUiCiAgICB0eG4gU2VuZGVyCiAgICBnbG9iYWwgQ3JlYXRvckFkZHJlc3MKICAgID09CiAgICBhc3NlcnQgLy8gT25seSBjcmVhdG9yIGNhbiBpbml0aWFsaXplCiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6NTkKICAgIC8vIGFzc2VydCBzZWxmLmFuY2hvcl9hdXRob3JpdHkuZ2V0KGRlZmF1bHQ9Qnl0ZXMoYiIiKSkgPT0gQnl0ZXMoYiIiKSwgIkFscmVhZHkgaW5pdGlhbGl6ZWQiCiAgICBpbnRjXzAgLy8gMAogICAgYnl0ZWNfMCAvLyAiYW5jaG9yX2F1dGhvcml0eSIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBieXRlY18yIC8vIDB4CiAgICBjb3ZlciAyCiAgICBzZWxlY3QKICAgIGJ5dGVjXzIgLy8gMHgKICAgID09CiAgICBhc3NlcnQgLy8gQWxyZWFkeSBpbml0aWFsaXplZAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjYwCiAgICAvLyBzZWxmLmFuY2hvcl9hdXRob3JpdHkudmFsdWUgPSBhdXRob3JpdHkuYnl0ZXMKICAgIGJ5dGVjXzAgLy8gImFuY2hvcl9hdXRob3JpdHkiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjQ0CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCgovLyBjb250cmFjdHMudGl0bGVfcHJvb2YuVGl0bGVQcm9vZkFuY2hvci5hbmNob3Jfc3RhdGVbcm91dGluZ10oKSAtPiB2b2lkOgphbmNob3Jfc3RhdGU6CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6NjIKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18yIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzIgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzMgLy8gOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDQKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzMgLy8gOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDUKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMiAvLyAyCiAgICArCiAgICBkaWcgMQogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDYKICAgIGxlbgogICAgaW50Y18zIC8vIDgKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQudWludDY0CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6OTgKICAgIC8vIGFzc2VydCBUeG4uc2VuZGVyLmJ5dGVzID09IHNlbGYuYW5jaG9yX2F1dGhvcml0eS52YWx1ZSwgIlVuYXV0aG9yaXplZDogb25seSBhbmNob3IgYXV0aG9yaXR5IGNhbiBzdWJtaXQiCiAgICB0eG4gU2VuZGVyCiAgICBpbnRjXzAgLy8gMAogICAgYnl0ZWNfMCAvLyAiYW5jaG9yX2F1dGhvcml0eSIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi5hbmNob3JfYXV0aG9yaXR5IGV4aXN0cwogICAgPT0KICAgIGFzc2VydCAvLyBVbmF1dGhvcml6ZWQ6IG9ubHkgYW5jaG9yIGF1dGhvcml0eSBjYW4gc3VibWl0CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6MTAwLTEwMQogICAgLy8gIyBWYWxpZGF0ZSBibG9jayByYW5nZSBpcyBjb2hlcmVudAogICAgLy8gYXNzZXJ0IGZhYnJpY19ibG9ja19lbmQubmF0aXZlID49IGZhYnJpY19ibG9ja19zdGFydC5uYXRpdmUsICJJbnZhbGlkIGJsb2NrIHJhbmdlOiBlbmQgPCBzdGFydCIKICAgIHN3YXAKICAgIGJ0b2kKICAgIHVuY292ZXIgMgogICAgYnRvaQogICAgPj0KICAgIGFzc2VydCAvLyBJbnZhbGlkIGJsb2NrIHJhbmdlOiBlbmQgPCBzdGFydAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjEwMy0xMDQKICAgIC8vICMgVmFsaWRhdGUgc3RhdGUgcm9vdCBpcyBub24tZW1wdHkKICAgIC8vIGFzc2VydCBzdGF0ZV9yb290Lm5hdGl2ZS5sZW5ndGggPiBVSW50NjQoMCksICJTdGF0ZSByb290IGNhbm5vdCBiZSBlbXB0eSIKICAgIGV4dHJhY3QgMiAwCiAgICBsZW4KICAgIGFzc2VydCAvLyBTdGF0ZSByb290IGNhbm5vdCBiZSBlbXB0eQogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjEwNi0xMDcKICAgIC8vICMgSW5jcmVtZW50IHRoZSBhbmNob3IgY291bnRlcgogICAgLy8gc2VsZi50b3RhbF9hbmNob3JzLnZhbHVlID0gc2VsZi50b3RhbF9hbmNob3JzLnZhbHVlICsgVUludDY0KDEpCiAgICBpbnRjXzAgLy8gMAogICAgYnl0ZWNfMSAvLyAidG90YWxfYW5jaG9ycyIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBhc3NlcnQgLy8gY2hlY2sgc2VsZi50b3RhbF9hbmNob3JzIGV4aXN0cwogICAgaW50Y18xIC8vIDEKICAgICsKICAgIGJ5dGVjXzEgLy8gInRvdGFsX2FuY2hvcnMiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjEwOAogICAgLy8gc2VsZi5sYXN0X2FuY2hvcl9yb3VuZC52YWx1ZSA9IG9wLkdsb2JhbC5yb3VuZAogICAgYnl0ZWNfMyAvLyAibGFzdF9hbmNob3Jfcm91bmQiCiAgICBnbG9iYWwgUm91bmQKICAgIGFwcF9nbG9iYWxfcHV0CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6MTE1CiAgICAvLyByZXR1cm4gYXJjNC5VSW50NjQoc2VsZi50b3RhbF9hbmNob3JzLnZhbHVlKQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzEgLy8gInRvdGFsX2FuY2hvcnMiCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIHNlbGYudG90YWxfYW5jaG9ycyBleGlzdHMKICAgIGl0b2IKICAgIC8vIGNvbnRyYWN0cy90aXRsZV9wcm9vZi5weTo2MgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBieXRlYyA0IC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgoKLy8gY29udHJhY3RzLnRpdGxlX3Byb29mLlRpdGxlUHJvb2ZBbmNob3IuZ2V0X2FuY2hvcl9jb3VudFtyb3V0aW5nXSgpIC0+IHZvaWQ6CmdldF9hbmNob3JfY291bnQ6CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6MTI4CiAgICAvLyByZXR1cm4gYXJjNC5VSW50NjQoc2VsZi50b3RhbF9hbmNob3JzLnZhbHVlKQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzEgLy8gInRvdGFsX2FuY2hvcnMiCiAgICBhcHBfZ2xvYmFsX2dldF9leAogICAgYXNzZXJ0IC8vIGNoZWNrIHNlbGYudG90YWxfYW5jaG9ycyBleGlzdHMKICAgIGl0b2IKICAgIC8vIGNvbnRyYWN0cy90aXRsZV9wcm9vZi5weToxMTcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChyZWFkb25seT1UcnVlKQogICAgYnl0ZWMgNCAvLyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKCi8vIGNvbnRyYWN0cy50aXRsZV9wcm9vZi5UaXRsZVByb29mQW5jaG9yLnJvdGF0ZV9hdXRob3JpdHlbcm91dGluZ10oKSAtPiB2b2lkOgpyb3RhdGVfYXV0aG9yaXR5OgogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjEzMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGxlbgogICAgcHVzaGludCAzMgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5zdGF0aWNfYXJyYXk8YXJjNC51aW50OCwgMzI+CiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6MTQ2CiAgICAvLyBhc3NlcnQgVHhuLnNlbmRlci5ieXRlcyA9PSBzZWxmLmFuY2hvcl9hdXRob3JpdHkudmFsdWUsICJVbmF1dGhvcml6ZWQ6IG9ubHkgY3VycmVudCBhdXRob3JpdHkgY2FuIHJvdGF0ZSIKICAgIHR4biBTZW5kZXIKICAgIGludGNfMCAvLyAwCiAgICBieXRlY18wIC8vICJhbmNob3JfYXV0aG9yaXR5IgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmFuY2hvcl9hdXRob3JpdHkgZXhpc3RzCiAgICA9PQogICAgYXNzZXJ0IC8vIFVuYXV0aG9yaXplZDogb25seSBjdXJyZW50IGF1dGhvcml0eSBjYW4gcm90YXRlCiAgICAvLyBjb250cmFjdHMvdGl0bGVfcHJvb2YucHk6MTQ3CiAgICAvLyBhc3NlcnQgbmV3X2F1dGhvcml0eS5ieXRlcyAhPSBCeXRlcyhiIiIpLCAiTmV3IGF1dGhvcml0eSBjYW5ub3QgYmUgZW1wdHkiCiAgICBkdXAKICAgIGJ5dGVjXzIgLy8gMHgKICAgICE9CiAgICBhc3NlcnQgLy8gTmV3IGF1dGhvcml0eSBjYW5ub3QgYmUgZW1wdHkKICAgIC8vIGNvbnRyYWN0cy90aXRsZV9wcm9vZi5weToxNDgKICAgIC8vIHNlbGYuYW5jaG9yX2F1dGhvcml0eS52YWx1ZSA9IG5ld19hdXRob3JpdHkuYnl0ZXMKICAgIGJ5dGVjXzAgLy8gImFuY2hvcl9hdXRob3JpdHkiCiAgICBzd2FwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgLy8gY29udHJhY3RzL3RpdGxlX3Byb29mLnB5OjEzMAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCg==",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "state": {
+        "global": {
+            "num_byte_slices": 1,
+            "num_uints": 2
+        },
+        "local": {
+            "num_byte_slices": 0,
+            "num_uints": 0
+        }
+    },
+    "schema": {
+        "global": {
+            "declared": {
+                "anchor_authority": {
+                    "type": "bytes",
+                    "key": "anchor_authority"
+                },
+                "last_anchor_round": {
+                    "type": "uint64",
+                    "key": "last_anchor_round"
+                },
+                "total_anchors": {
+                    "type": "uint64",
+                    "key": "total_anchors"
+                }
+            },
+            "reserved": {}
+        },
+        "local": {
+            "declared": {},
+            "reserved": {}
+        }
+    },
+    "contract": {
+        "name": "TitleProofAnchor",
+        "desc": "\n    Stores Fabric state roots on Algorand for independent verification.\n\n    Global state layout:\n        anchor_authority   - Address of the account authorized to submit anchors\n        total_anchors      - Running count of all anchors submitted\n        last_anchor_round  - Algorand round number of the most recent anchor\n\n    Each anchor_state call records a batch of Fabric blocks (identified by\n    state_code, channel_id, block range, state root hash, and transaction\n    count). The state root itself is passed as an argument and is available\n    in the transaction log for off-chain verifiers to inspect. On-chain, the\n    contract tracks the anchor sequence number and the Algorand round for\n    temporal ordering.\n    ",
+        "methods": [
+            {
+                "name": "initialize",
+                "args": [
+                    {
+                        "type": "address",
+                        "name": "authority",
+                        "desc": "The Algorand address that will be permitted to submit state root anchors and manage title ASAs."
+                    }
+                ],
+                "readonly": false,
+                "returns": {
+                    "type": "void"
+                },
+                "desc": "Set the authorized anchor account. Can only be called once by the\napplication creator."
+            },
+            {
+                "name": "anchor_state",
+                "args": [
+                    {
+                        "type": "string",
+                        "name": "state_code",
+                        "desc": "Indian state code (e.g., \"UP\", \"MH\", \"DL\")"
+                    },
+                    {
+                        "type": "string",
+                        "name": "channel_id",
+                        "desc": "Fabric channel name (e.g., \"land-registry-channel\")"
+                    },
+                    {
+                        "type": "uint64",
+                        "name": "fabric_block_start",
+                        "desc": "First Fabric block number in this anchor batch"
+                    },
+                    {
+                        "type": "uint64",
+                        "name": "fabric_block_end",
+                        "desc": "Last Fabric block number in this anchor batch"
+                    },
+                    {
+                        "type": "byte[]",
+                        "name": "state_root",
+                        "desc": "Merkle root hash of all state changes in the batch"
+                    },
+                    {
+                        "type": "uint64",
+                        "name": "tx_count",
+                        "desc": "Number of Fabric transactions in this batch"
+                    }
+                ],
+                "readonly": false,
+                "returns": {
+                    "type": "uint64",
+                    "desc": "The anchor sequence number (1-indexed)."
+                },
+                "desc": "Anchor a Fabric state root to Algorand.\nThis is the core anchoring operation. The middleware batches Fabric blocks (typically every N blocks or every M minutes), computes a Merkle root of all state changes in that batch, and submits it here.\nThe state_root bytes are recorded in the transaction arguments and are therefore permanently available via the Algorand Indexer. The on-chain global state only tracks the anchor count and last round for efficiency."
+            },
+            {
+                "name": "get_anchor_count",
+                "args": [],
+                "readonly": true,
+                "returns": {
+                    "type": "uint64",
+                    "desc": "The total number of anchors as an ARC4-encoded UInt64."
+                },
+                "desc": "Get total number of state root anchors submitted to this contract.\nThis is a read-only method that does not modify state. It can be called by anyone without a transaction fee (via simulate)."
+            },
+            {
+                "name": "rotate_authority",
+                "args": [
+                    {
+                        "type": "address",
+                        "name": "new_authority",
+                        "desc": "The new Algorand address to authorize for anchoring."
+                    }
+                ],
+                "readonly": false,
+                "returns": {
+                    "type": "void"
+                },
+                "desc": "Rotate the anchor authority to a new address.\nThis allows key rotation without redeploying the contract. Only the current authority can perform this operation. After rotation, the old authority address can no longer submit anchors."
+            }
+        ],
+        "networks": {}
+    },
+    "bare_call_config": {
+        "no_op": "CREATE"
+    }
+}

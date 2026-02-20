@@ -90,140 +90,6 @@ interface PropertyState {
   clearSearch: () => void;
 }
 
-// Mock data for demonstration when API is not available
-const MOCK_SEARCH_RESULTS: PropertySummary[] = [
-  {
-    id: 'PROP-MH-2024-00142',
-    surveyNumber: '123/4A',
-    district: 'Pune',
-    tehsil: 'Haveli',
-    village: 'Wadgaon Sheri',
-    state: 'MH',
-    area: '2400 sq ft',
-    ownerName: 'Rajesh Kumar Sharma',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'PROP-MH-2024-00891',
-    surveyNumber: '456/7B',
-    district: 'Pune',
-    tehsil: 'Haveli',
-    village: 'Kharadi',
-    state: 'MH',
-    area: '1200 sq ft',
-    ownerName: 'Priya Mehta',
-    status: 'ENCUMBERED',
-  },
-  {
-    id: 'PROP-MH-2023-01234',
-    surveyNumber: '789/2C',
-    district: 'Mumbai',
-    tehsil: 'Andheri',
-    village: 'Versova',
-    state: 'MH',
-    area: '850 sq ft',
-    ownerName: 'Amit Deshmukh',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'PROP-GJ-2024-00567',
-    surveyNumber: '321/1A',
-    district: 'Ahmedabad',
-    tehsil: 'Daskroi',
-    village: 'Bopal',
-    state: 'GJ',
-    area: '3200 sq ft',
-    ownerName: 'Suresh Patel',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'PROP-KA-2024-00234',
-    surveyNumber: '654/3B',
-    district: 'Bangalore Urban',
-    tehsil: 'Anekal',
-    village: 'Electronic City',
-    state: 'KA',
-    area: '1800 sq ft',
-    ownerName: 'Lakshmi Narayanan',
-    status: 'DISPUTED',
-  },
-  {
-    id: 'PROP-TG-2024-00890',
-    surveyNumber: '987/5D',
-    district: 'Hyderabad',
-    tehsil: 'Rajendranagar',
-    village: 'Narsingi',
-    state: 'TG',
-    area: '2000 sq ft',
-    ownerName: 'Mohammed Irfan',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'PROP-UP-2024-01122',
-    surveyNumber: '111/8E',
-    district: 'Lucknow',
-    tehsil: 'Sarojininagar',
-    village: 'Gomti Nagar',
-    state: 'UP',
-    area: '1500 sq ft',
-    ownerName: 'Neha Gupta',
-    status: 'TRANSFER_IN_PROGRESS',
-  },
-  {
-    id: 'PROP-RJ-2024-00345',
-    surveyNumber: '222/6F',
-    district: 'Jaipur',
-    tehsil: 'Sanganer',
-    village: 'Mansarovar',
-    state: 'RJ',
-    area: '2800 sq ft',
-    ownerName: 'Vikram Singh Rathore',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'PROP-DL-2024-00678',
-    surveyNumber: '333/9G',
-    district: 'South Delhi',
-    tehsil: 'Hauz Khas',
-    village: 'Safdarjung Enclave',
-    state: 'DL',
-    area: '1100 sq ft',
-    ownerName: 'Ananya Kapoor',
-    status: 'FROZEN',
-  },
-];
-
-function filterMockResults(query: SearchQuery): PropertySummary[] {
-  return MOCK_SEARCH_RESULTS.filter((property) => {
-    if (query.stateCode && property.state !== query.stateCode) return false;
-    if (
-      query.district &&
-      !property.district.toLowerCase().includes(query.district.toLowerCase())
-    )
-      return false;
-    if (
-      query.tehsil &&
-      !property.tehsil.toLowerCase().includes(query.tehsil.toLowerCase())
-    )
-      return false;
-    if (
-      query.village &&
-      !property.village.toLowerCase().includes(query.village.toLowerCase())
-    )
-      return false;
-    if (
-      query.surveyNumber &&
-      !property.surveyNumber.includes(query.surveyNumber)
-    )
-      return false;
-    if (
-      query.ownerName &&
-      !property.ownerName.toLowerCase().includes(query.ownerName.toLowerCase())
-    )
-      return false;
-    return true;
-  });
-}
 
 export const usePropertyStore = create<PropertyState>((set) => ({
   searchResults: [],
@@ -238,48 +104,57 @@ export const usePropertyStore = create<PropertyState>((set) => ({
     set({ loading: true, error: null });
 
     try {
+      const params: Record<string, string> = {};
+      if (query.stateCode) params['stateCode'] = query.stateCode;
+      if (query.district) params['district'] = query.district;
+      if (query.tehsil) params['tehsil'] = query.tehsil;
+      if (query.village) params['village'] = query.village;
+      if (query.surveyNumber) params['surveyNo'] = query.surveyNumber;
+      if (query.ownerName) params['ownerName'] = query.ownerName;
+
       const response = await apiClient.get<{
-        results: PropertySummary[];
-        total: number;
-      }>('/properties/search', query as Record<string, string>);
+        success: boolean;
+        data: {
+          records: Array<Record<string, unknown>>;
+          pagination: { total: number };
+        };
+      }>('/land/search', params);
+
+      const records = response.data.records.map((r): PropertySummary => {
+        // Handle Prisma Decimal for area
+        let area = '?';
+        const raw = r['areaSqMeters'];
+        if (typeof raw === 'number' || typeof raw === 'string') {
+          area = String(raw);
+        } else if (raw && typeof raw === 'object' && 's' in (raw as Record<string, unknown>)) {
+          const dec = raw as { s: number; e: number; d: number[] };
+          const digits = dec.d.join('');
+          area = String(dec.s * Number(digits) * Math.pow(10, dec.e - digits.length + 1));
+        }
+        return {
+          id: String(r['propertyId'] ?? ''),
+          surveyNumber: String(r['surveyNumber'] ?? ''),
+          district: String(r['districtCode'] ?? ''),
+          tehsil: String(r['tehsilCode'] ?? ''),
+          village: String(r['villageCode'] ?? ''),
+          state: String(r['stateCode'] ?? ''),
+          area: `${area} sq m`,
+          ownerName: String(r['ownerName'] ?? ''),
+          status: (String(r['status'] ?? 'ACTIVE')) as PropertyStatus,
+        };
+      });
 
       set({
-        searchResults: response.results,
-        totalResults: response.total,
+        searchResults: records,
+        totalResults: response.data.pagination.total,
         loading: false,
       });
     } catch (error) {
-      // Fallback to mock data for demo
-      if (
-        error instanceof TypeError ||
-        (error instanceof ApiRequestError && error.status >= 500)
-      ) {
-        const filtered = filterMockResults(query);
-        set({
-          searchResults: filtered,
-          totalResults: filtered.length,
-          loading: false,
-        });
-        return;
-      }
-
-      // If there are no specific filters, show all mock results
-      if (Object.keys(query).length === 0) {
-        set({
-          searchResults: MOCK_SEARCH_RESULTS,
-          totalResults: MOCK_SEARCH_RESULTS.length,
-          loading: false,
-        });
-        return;
-      }
-
-      const filtered = filterMockResults(query);
-      set({
-        searchResults: filtered,
-        totalResults: filtered.length,
-        loading: false,
-        error: null,
-      });
+      const message =
+        error instanceof ApiRequestError
+          ? error.message
+          : 'Search failed';
+      set({ loading: false, error: message, searchResults: [], totalResults: 0 });
     }
   },
 
@@ -287,9 +162,79 @@ export const usePropertyStore = create<PropertyState>((set) => ({
     set({ loading: true, error: null });
 
     try {
-      const property = await apiClient.get<PropertyDetail>(
-        `/properties/${id}`
-      );
+      const response = await apiClient.get<{
+        success: boolean;
+        data: Record<string, unknown>;
+      }>(`/land/${id}`);
+
+      const r = response.data;
+
+      // Helper: extract a usable number from Prisma Decimal {s,e,d} or plain number
+      const toNum = (val: unknown): string => {
+        if (val == null) return '';
+        if (typeof val === 'number') return String(val);
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object' && 's' in (val as Record<string, unknown>)) {
+          // Prisma Decimal: reconstruct from {s, e, d}
+          const dec = val as { s: number; e: number; d: number[] };
+          const digits = dec.d.join('');
+          const num = dec.s * Number(digits) * Math.pow(10, dec.e - digits.length + 1);
+          return String(num);
+        }
+        return String(val);
+      };
+
+      // Helper: extract a date string from various formats
+      const toDateStr = (val: unknown): string => {
+        if (val == null) return '';
+        if (typeof val === 'string' && val.length > 0) return val;
+        // Prisma Date serializes as ISO string normally, but empty {} means no value
+        if (typeof val === 'object' && Object.keys(val as object).length === 0) return '';
+        return String(val);
+      };
+
+      const owner = r['currentOwner'] as Record<string, unknown> | undefined;
+      const owners = (owner?.['owners'] as Array<Record<string, unknown>>) ?? [];
+      const firstOwner = owners[0] ?? {};
+      const location = r['location'] as Record<string, string> | undefined;
+      const boundaries = r['boundaries'] as Record<string, unknown> | undefined;
+      const geoJson = boundaries?.['geoJson'] as { coordinates?: number[][][] } | null;
+      const coords = (geoJson?.coordinates?.[0] as Array<[number, number]>) ?? [];
+
+      // Area: Fabric has area.value (number), PostgreSQL has areaSqMeters (Decimal)
+      const areaRaw = r['area'] as Record<string, unknown> | undefined;
+      const areaValue = areaRaw?.['value'] != null ? toNum(areaRaw['value']) : toNum(r['areaSqMeters']);
+
+      const property: PropertyDetail = {
+        id: String(r['propertyId'] ?? id),
+        surveyNumber: String(r['surveyNumber'] ?? ''),
+        khasraNumber: String(r['subSurveyNumber'] ?? ''),
+        district: location?.['districtName'] ?? String(r['districtCode'] ?? ''),
+        tehsil: location?.['tehsilName'] ?? String(r['tehsilCode'] ?? ''),
+        village: location?.['villageName'] ?? String(r['villageCode'] ?? ''),
+        state: location?.['stateName'] ?? String(r['stateCode'] ?? ''),
+        stateCode: location?.['stateCode'] ?? String(r['stateCode'] ?? ''),
+        ownerName: String(firstOwner['name'] ?? r['ownerName'] ?? ''),
+        area: areaValue,
+        areaUnit: 'sq m',
+        landType: String(r['landUse'] ?? ''),
+        status: String(r['status'] ?? 'ACTIVE') as PropertyStatus,
+        currentOwner: {
+          name: String(firstOwner['name'] ?? r['ownerName'] ?? ''),
+          aadhaarHash: String(firstOwner['aadhaarHash'] ?? r['ownerAadhaarHash'] ?? ''),
+          acquisitionType: String(owner?.['acquisitionType'] ?? r['acquisitionType'] ?? ''),
+          acquisitionDate: toDateStr(owner?.['acquisitionDate'] ?? r['acquisitionDate']),
+        },
+        encumbrances: [],
+        fabricTxId: String(r['fabricTxId'] ?? ''),
+        algorandAppId: r['algorandInfo'] ? String((r['algorandInfo'] as Record<string, unknown>)['asaId'] ?? '') : null,
+        algorandVerified: false,
+        lastVerifiedAt: null,
+        coordinates: coords,
+        createdAt: toDateStr(r['createdAt']),
+        updatedAt: toDateStr(r['updatedAt']),
+      };
+
       set({ selectedProperty: property, loading: false });
     } catch (error) {
       const message =
@@ -305,12 +250,26 @@ export const usePropertyStore = create<PropertyState>((set) => ({
     set({ historyLoading: true });
 
     try {
-      const response = await apiClient.get<{ records: OwnershipRecord[] }>(
-        `/properties/${id}/history`
-      );
-      set({ propertyHistory: response.records, historyLoading: false });
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {
+          chain: Array<Record<string, unknown>>;
+        };
+      }>(`/land/${id}/history`);
+
+      const records = response.data.chain.map((entry, idx, arr): OwnershipRecord => {
+        const owner = entry['owner'] as Record<string, string> | undefined;
+        return {
+          ownerName: owner?.['name'] ?? String(entry['ownerName'] ?? ''),
+          acquisitionType: String(entry['acquisitionType'] ?? 'SALE') as OwnershipRecord['acquisitionType'],
+          date: String(entry['date'] ?? ''),
+          fabricTxId: String(entry['fabricTxId'] ?? ''),
+          isCurrent: idx === arr.length - 1,
+        };
+      });
+
+      set({ propertyHistory: records, historyLoading: false });
     } catch {
-      // Silently fail for history -- the page has its own mock data
       set({ historyLoading: false });
     }
   },

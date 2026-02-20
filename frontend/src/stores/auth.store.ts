@@ -72,15 +72,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Invalid Aadhaar number');
       }
 
-      const response = await apiClient.post<{ transactionId: string }>(
-        '/auth/aadhaar/otp',
+      const response = await apiClient.post<{ success: boolean; data: { transactionId: string } }>(
+        '/auth/aadhaar/init',
         {
           aadhaarNumber,
         }
       );
 
       set({ loading: false });
-      return response.transactionId;
+      return response.data.transactionId;
     } catch (error) {
       const message =
         error instanceof ApiRequestError
@@ -110,18 +110,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       const response = await apiClient.post<{
-        accessToken: string;
-        refreshToken: string;
-        user: User;
+        success: boolean;
+        data: {
+          accessToken: string;
+          refreshToken: string;
+          user: User;
+        };
       }>('/auth/aadhaar/verify', {
         transactionId,
         otp,
       });
 
-      setTokens(response.accessToken, response.refreshToken);
+      setTokens(response.data.accessToken, response.data.refreshToken);
 
       set({
-        user: response.user,
+        user: response.data.user,
         isAuthenticated: true,
         loading: false,
         error: null,
@@ -192,11 +195,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const response = await apiClient.post<{
-        accessToken: string;
-        refreshToken: string;
+        success: boolean;
+        data: {
+          accessToken: string;
+          refreshToken: string;
+        };
       }>('/auth/refresh', { refreshToken });
 
-      setTokens(response.accessToken, response.refreshToken);
+      setTokens(response.data.accessToken, response.data.refreshToken);
 
       const user = getUserFromToken();
       set({

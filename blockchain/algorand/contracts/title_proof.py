@@ -16,7 +16,7 @@ is compromised, there is a tamper-proof public record of every state
 transition batch.
 """
 
-from algopy import ARC4Contract, GlobalState, Txn, op, arc4, UInt64, Bytes
+from algopy import ARC4Contract, GlobalState, Txn, op, arc4, UInt64, Bytes, Account
 
 
 class TitleProofAnchor(ARC4Contract):
@@ -36,15 +36,10 @@ class TitleProofAnchor(ARC4Contract):
     temporal ordering.
     """
 
-    # Global state declarations
-    anchor_authority: GlobalState[Bytes]
-    total_anchors: GlobalState[UInt64]
-    last_anchor_round: GlobalState[UInt64]
-
     def __init__(self) -> None:
-        self.anchor_authority = GlobalState(Bytes)
-        self.total_anchors = GlobalState(UInt64, default=UInt64(0))
-        self.last_anchor_round = GlobalState(UInt64, default=UInt64(0))
+        self.anchor_authority = GlobalState(Bytes(b""))
+        self.total_anchors = GlobalState(UInt64(0))
+        self.last_anchor_round = GlobalState(UInt64(0))
 
     @arc4.abimethod
     def initialize(self, authority: arc4.Address) -> None:
@@ -100,7 +95,7 @@ class TitleProofAnchor(ARC4Contract):
         Raises:
             AssertionError: If the caller is not the authorized anchor account.
         """
-        assert Txn.sender == self.anchor_authority.value, "Unauthorized: only anchor authority can submit"
+        assert Txn.sender.bytes == self.anchor_authority.value, "Unauthorized: only anchor authority can submit"
 
         # Validate block range is coherent
         assert fabric_block_end.native >= fabric_block_start.native, "Invalid block range: end < start"
@@ -148,6 +143,6 @@ class TitleProofAnchor(ARC4Contract):
             AssertionError: If the caller is not the current anchor authority
                             or if the new authority is a zero address.
         """
-        assert Txn.sender == self.anchor_authority.value, "Unauthorized: only current authority can rotate"
+        assert Txn.sender.bytes == self.anchor_authority.value, "Unauthorized: only current authority can rotate"
         assert new_authority.bytes != Bytes(b""), "New authority cannot be empty"
         self.anchor_authority.value = new_authority.bytes

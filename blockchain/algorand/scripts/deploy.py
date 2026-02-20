@@ -27,10 +27,9 @@ from pathlib import Path
 
 from algokit_utils import (
     AlgorandClient,
-    AppClient,
     AppFactory,
-    AppFactoryCreateParams,
 )
+from algokit_utils.applications.app_factory import AppFactoryParams, AppFactoryCreateParams
 
 
 # Network configuration presets
@@ -123,23 +122,28 @@ def deploy(network: str) -> int:
             print("Error: ALGORAND_ANCHOR_ACCOUNT_MNEMONIC environment variable not set.")
             print("Set it to the 25-word mnemonic of the anchor/deployer account.")
             sys.exit(1)
-        deployer = algorand.account.from_mnemonic(mnemonic)
+        deployer = algorand.account.from_mnemonic(mnemonic=mnemonic)
         print(f"  Deployer: {deployer.address}")
 
     # Locate the compiled application specification
     app_spec_path = get_app_spec_path()
     print(f"  App spec: {app_spec_path}")
 
+    # Load the app spec JSON content (string is treated as JSON, not a path)
+    app_spec_json = app_spec_path.read_text()
+
     # Create an AppFactory for the TitleProofAnchor contract
     factory = AppFactory(
-        algorand=algorand,
-        app_spec=app_spec_path,
-        default_sender=deployer.address,
+        AppFactoryParams(
+            algorand=algorand,
+            app_spec=app_spec_json,
+            default_sender=deployer.address,
+        )
     )
 
-    # Deploy the application
+    # Deploy the application (bare create — no ABI method on creation)
     print("  Creating application on-chain...")
-    app_client, create_result = factory.send.create(
+    app_client, create_result = factory.send.bare.create(
         AppFactoryCreateParams()
     )
 
@@ -155,10 +159,11 @@ def deploy(network: str) -> int:
     # but for initial deployment the deployer sets itself as authority
     # and can later rotate to a different account.
     print(f"  Initializing with anchor authority: {deployer.address}")
-    app_client.send.call(
+    from algokit_utils.applications.app_client import AppClientMethodCallParams
+    app_client.send.call(AppClientMethodCallParams(
         method="initialize",
-        args={"authority": deployer.address},
-    )
+        args=[deployer.address],
+    ))
     print("  Contract initialized successfully!")
 
     # Print summary
