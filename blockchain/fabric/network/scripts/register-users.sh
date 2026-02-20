@@ -7,7 +7,8 @@
 #
 # The CA containers mount the cryptogen-generated CA cert+key, so every cert
 # issued by fabric-ca-server is already in the same trust chain the peers
-# recognise.
+# recognise. TLS is disabled on the CA servers in dev (the cryptogen CA certs
+# lack localhost SAN), but the issued certs are still signed by the same CA key.
 #
 # Usage: ./register-users.sh          (called by network.sh — not standalone)
 # =============================================================================
@@ -65,7 +66,7 @@ wait_for_ca() {
     log_info "Waiting for ${ca_name} to be ready at ${ca_url}..."
 
     while [ $count -lt $max_retries ]; do
-        if curl -sk "${ca_url}/cainfo" > /dev/null 2>&1; then
+        if curl -s "http://${ca_url}/cainfo" > /dev/null 2>&1; then
             log_ok "${ca_name} is ready"
             return 0
         fi
@@ -84,7 +85,6 @@ enroll_ca_admin() {
     local ca_url="$1"
     local ca_name="$2"
     local admin_home="$3"
-    local tls_certfile="$4"
 
     if [ -d "${admin_home}/msp/signcerts" ] && [ "$(ls -A "${admin_home}/msp/signcerts" 2>/dev/null)" ]; then
         log_warn "CA admin for ${ca_name} already enrolled. Skipping."
@@ -95,9 +95,8 @@ enroll_ca_admin() {
 
     log_info "Enrolling CA admin for ${ca_name}..."
     fabric-ca-client enroll \
-        -u "https://admin:adminpw@${ca_url}" \
+        -u "http://admin:adminpw@${ca_url}" \
         --caname "${ca_name}" \
-        --tls.certfiles "${tls_certfile}" \
         -M "${admin_home}/msp"
 
     log_ok "CA admin enrolled for ${ca_name}"
@@ -143,8 +142,6 @@ register_and_enroll_user() {
     local ca_url="$5"
     local ca_name="$6"
     local admin_home="$7"
-    local tls_certfile="$8"
-    local msp_id="$9"
 
     local user_msp_dir="${CRYPTO_DIR}/peerOrganizations/${org_domain}/users/${username}@${org_domain}/msp"
 
@@ -164,9 +161,8 @@ register_and_enroll_user() {
         --id.secret "${username}pw" \
         --id.type client \
         --id.attrs "role=${role}:ecert,stateCode=${state_code}:ecert" \
-        --tls.certfiles "${tls_certfile}" \
         -M "${admin_home}/msp" \
-        -u "https://${ca_url}" \
+        -u "http://${ca_url}" \
         2>&1
     local reg_rc=$?
     set -e
@@ -179,13 +175,12 @@ register_and_enroll_user() {
     mkdir -p "${user_msp_dir}"
 
     fabric-ca-client enroll \
-        -u "https://${username}:${username}pw@${ca_url}" \
+        -u "http://${username}:${username}pw@${ca_url}" \
         --caname "${ca_name}" \
         --enrollment.attrs "role,stateCode" \
-        --tls.certfiles "${tls_certfile}" \
         -M "${user_msp_dir}"
 
-    # Copy the org's TLS CA cert into the user MSP (peers need it for NodeOU)
+    # Copy the org's CA cert into the user MSP (peers need it for NodeOU)
     local org_ca_cert
     org_ca_cert=$(ls "${CRYPTO_DIR}/peerOrganizations/${org_domain}/ca/"*-cert.pem 2>/dev/null | head -1)
 
@@ -212,10 +207,6 @@ log_info "=== Registering users with ABAC attributes ==="
 fix_ca_keyfile "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/ca"
 fix_ca_keyfile "${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/ca"
 
-# ---- TLS cert files (the CA's own TLS cert — same as signing cert in dev) ----
-REVENUE_CA_TLS_CERT=$(ls "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/ca/"*-cert.pem | head -1)
-BANK_CA_TLS_CERT=$(ls "${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/ca/"*-cert.pem | head -1)
-
 # ---- Wait for CAs ----
 wait_for_ca "localhost:7054" "ca-revenue"
 wait_for_ca "localhost:8054" "ca-bank"
@@ -226,8 +217,8 @@ BANK_ADMIN_HOME="${CA_CLIENT_HOME}/bank-admin"
 
 export FABRIC_CA_CLIENT_HOME="${CA_CLIENT_HOME}"
 
-enroll_ca_admin "localhost:7054" "ca-revenue" "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}"
-enroll_ca_admin "localhost:8054" "ca-bank"    "${BANK_ADMIN_HOME}"    "${BANK_CA_TLS_CERT}"
+enroll_ca_admin "localhost:7054" "ca-revenue" "${REVENUE_ADMIN_HOME}"
+enroll_ca_admin "localhost:8054" "ca-bank"    "${BANK_ADMIN_HOME}"
 
 # ---- Register & enroll RevenueOrg users ----
 REVENUE_DOMAIN="revenue.bhulekhchain.dev"
@@ -236,27 +227,27 @@ REVENUE_CA_NAME="ca-revenue"
 
 register_and_enroll_user "registrar1" "registrar" "DL" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 register_and_enroll_user "registrar2" "registrar" "MH" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 register_and_enroll_user "tehsildar1" "tehsildar" "DL" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 register_and_enroll_user "admin1" "admin" "DL" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 register_and_enroll_user "citizen1" "citizen" "DL" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 register_and_enroll_user "court1" "court" "DL" \
     "${REVENUE_DOMAIN}" "${REVENUE_CA_URL}" "${REVENUE_CA_NAME}" \
-    "${REVENUE_ADMIN_HOME}" "${REVENUE_CA_TLS_CERT}" "RevenueOrgMSP"
+    "${REVENUE_ADMIN_HOME}"
 
 # ---- Register & enroll BankOrg users ----
 BANK_DOMAIN="bank.bhulekhchain.dev"
@@ -265,7 +256,7 @@ BANK_CA_NAME="ca-bank"
 
 register_and_enroll_user "bank1" "bank" "DL" \
     "${BANK_DOMAIN}" "${BANK_CA_URL}" "${BANK_CA_NAME}" \
-    "${BANK_ADMIN_HOME}" "${BANK_CA_TLS_CERT}" "BankOrgMSP"
+    "${BANK_ADMIN_HOME}"
 
 echo ""
 log_ok "=== All users registered and enrolled ==="
