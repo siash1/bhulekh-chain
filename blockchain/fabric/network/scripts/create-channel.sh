@@ -19,7 +19,7 @@ set -e
 # -----------------------------------------------------------------------------
 CHANNEL_NAME="land-registry-channel"
 CHANNEL_ARTIFACTS_DIR="${PWD}/../channel-artifacts"
-CRYPTO_DIR="${PWD}/../organizations"
+CRYPTO_DIR="${PWD}/../crypto-material"
 ORDERER_CA="${CRYPTO_DIR}/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp/tlscacerts/tlsca.orderer.bhulekhchain.dev-cert.pem"
 ORDERER_ADDRESS="orderer0.orderer.bhulekhchain.dev:7050"
 

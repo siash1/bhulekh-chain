@@ -20,7 +20,7 @@ Organizations:
   - &OrdererOrg
     Name: OrdererOrg
     ID: OrdererMSP
-    MSPDir: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/msp
+    MSPDir: crypto-material/ordererOrganizations/orderer.bhulekhchain.dev/msp
     Policies:
       Readers:
         Type: Signature
@@ -37,7 +37,7 @@ Organizations:
   - &RevenueOrg
     Name: RevenueOrgMSP
     ID: RevenueOrgMSP
-    MSPDir: ../organizations/peerOrganizations/revenue.bhulekhchain.dev/msp
+    MSPDir: crypto-material/peerOrganizations/revenue.bhulekhchain.dev/msp
     Policies:
       Readers:
         Type: Signature
@@ -58,7 +58,7 @@ Organizations:
   - &BankOrg
     Name: BankOrgMSP
     ID: BankOrgMSP
-    MSPDir: ../organizations/peerOrganizations/bank.bhulekhchain.dev/msp
+    MSPDir: crypto-material/peerOrganizations/bank.bhulekhchain.dev/msp
     Policies:
       Readers:
         Type: Signature
@@ -126,8 +126,8 @@ Orderer: &OrdererDefaults
     Consenters:
       - Host: orderer0.orderer.bhulekhchain.dev
         Port: 7050
-        ClientTLSCert: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
-        ServerTLSCert: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
+        ClientTLSCert: crypto-material/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
+        ServerTLSCert: crypto-material/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
 
   # Block cutting parameters
   BatchTimeout: 2s

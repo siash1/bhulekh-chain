@@ -32,7 +32,7 @@ CC_SRC_PATH="${PWD}/../../chaincode/${CC_NAME}"
 CC_RUNTIME_LANGUAGE="golang"
 
 CHANNEL_NAME="land-registry-channel"
-CRYPTO_DIR="${PWD}/../organizations"
+CRYPTO_DIR="${PWD}/../crypto-material"
 ORDERER_CA="${CRYPTO_DIR}/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp/tlscacerts/tlsca.orderer.bhulekhchain.dev-cert.pem"
 ORDERER_ADDRESS="orderer0.orderer.bhulekhchain.dev:7050"
 
@@ -56,14 +56,6 @@ set_peer0_revenue_env() {
     export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
     export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
     export CORE_PEER_ADDRESS="peer0.revenue.bhulekhchain.dev:7051"
-}
-
-set_peer1_revenue_env() {
-    export CORE_PEER_TLS_ENABLED=true
-    export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer1.revenue.bhulekhchain.dev/tls/ca.crt"
-    export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
-    export CORE_PEER_ADDRESS="peer1.revenue.bhulekhchain.dev:8051"
 }
 
 set_peer0_bank_env() {
@@ -143,10 +135,6 @@ install_on_all_peers() {
 
     echo ">>> Installing on peer0.revenue..."
     set_peer0_revenue_env
-    peer lifecycle chaincode install "${CC_PKG_FILE}"
-
-    echo ">>> Installing on peer1.revenue..."
-    set_peer1_revenue_env
     peer lifecycle chaincode install "${CC_PKG_FILE}"
 
     echo ">>> Installing on peer0.bank..."

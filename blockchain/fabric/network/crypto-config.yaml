@@ -19,7 +19,7 @@ PeerOrgs:
   # ---------------------------------------------------------------------------
   # RevenueOrg — State Revenue Department
   # Primary organization responsible for land records, mutations, registrations.
-  # 2 peers for high availability and endorsement redundancy.
+  # 1 peer for dev; scale up in production.
   # ---------------------------------------------------------------------------
   - Name: RevenueOrg
     Domain: revenue.bhulekhchain.dev
@@ -31,12 +31,12 @@ PeerOrgs:
       Locality: New Delhi
       OrganizationalUnit: Revenue Department
     Template:
-      Count: 2
+      Count: 1
       SANS:
         - localhost
         - 127.0.0.1
     Users:
-      Count: 2  # Admin is implicit; 2 additional regular users
+      Count: 1  # Admin is implicit; 1 additional regular user
 
   # ---------------------------------------------------------------------------
   # BankOrg — Banking & Financial Institutions

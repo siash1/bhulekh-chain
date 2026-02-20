@@ -19,7 +19,7 @@ set -e
 # -----------------------------------------------------------------------------
 CHANNEL_NAME="land-registry-channel"
 CHANNEL_ARTIFACTS_DIR="${PWD}/../channel-artifacts"
-CRYPTO_DIR="${PWD}/../organizations"
+CRYPTO_DIR="${PWD}/../crypto-material"
 ORDERER_CA="${CRYPTO_DIR}/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp/tlscacerts/tlsca.orderer.bhulekhchain.dev-cert.pem"
 ORDERER_ADDRESS="orderer0.orderer.bhulekhchain.dev:7050"
 BLOCK_FILE="${CHANNEL_ARTIFACTS_DIR}/${CHANNEL_NAME}.block"
@@ -45,14 +45,6 @@ set_peer0_revenue_env() {
     export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
     export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
     export CORE_PEER_ADDRESS="peer0.revenue.bhulekhchain.dev:7051"
-}
-
-set_peer1_revenue_env() {
-    export CORE_PEER_TLS_ENABLED=true
-    export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer1.revenue.bhulekhchain.dev/tls/ca.crt"
-    export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
-    export CORE_PEER_ADDRESS="peer1.revenue.bhulekhchain.dev:8051"
 }
 
 set_peer0_bank_env() {
@@ -142,21 +134,14 @@ echo ""
 
 # --- Join peer0.revenue ---
 echo "------------------------------------------------------------"
-echo "  [1/3] peer0.revenue.bhulekhchain.dev"
+echo "  [1/2] peer0.revenue.bhulekhchain.dev"
 echo "------------------------------------------------------------"
 set_peer0_revenue_env
 join_channel_with_retry "peer0.revenue.bhulekhchain.dev"
 
-# --- Join peer1.revenue ---
-echo "------------------------------------------------------------"
-echo "  [2/3] peer1.revenue.bhulekhchain.dev"
-echo "------------------------------------------------------------"
-set_peer1_revenue_env
-join_channel_with_retry "peer1.revenue.bhulekhchain.dev"
-
 # --- Join peer0.bank ---
 echo "------------------------------------------------------------"
-echo "  [3/3] peer0.bank.bhulekhchain.dev"
+echo "  [2/2] peer0.bank.bhulekhchain.dev"
 echo "------------------------------------------------------------"
 set_peer0_bank_env
 join_channel_with_retry "peer0.bank.bhulekhchain.dev"
@@ -181,11 +166,6 @@ echo ""
 
 echo ">>> peer0.revenue channel list:"
 set_peer0_revenue_env
-peer channel list
-
-echo ""
-echo ">>> peer1.revenue channel list:"
-set_peer1_revenue_env
 peer channel list
 
 echo ""
