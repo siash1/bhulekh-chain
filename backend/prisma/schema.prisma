@@ -25,7 +25,7 @@ model LandRecord {
   areaSqMeters      Decimal  @map("area_sq_meters") @db.Decimal(15, 2)
   areaLocalValue    Decimal? @map("area_local_value") @db.Decimal(10, 4)
   areaLocalUnit     String?  @map("area_local_unit") @db.VarChar(20)
-  ownerAadhaarHash  String   @map("owner_aadhaar_hash") @db.VarChar(64)
+  ownerAadhaarHash  String   @map("owner_aadhaar_hash") @db.VarChar(72)
   ownerName         String   @map("owner_name") @db.VarChar(200)
   ownerFatherName   String?  @map("owner_father_name") @db.VarChar(200)
   ownershipType     String   @default("FREEHOLD") @map("ownership_type") @db.VarChar(20)
@@ -51,8 +51,8 @@ model LandRecord {
   provenanceSequence Int     @default(1) @map("provenance_sequence")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
-  createdBy         String?  @map("created_by") @db.VarChar(64)
-  updatedBy         String?  @map("updated_by") @db.VarChar(64)
+  createdBy         String?  @map("created_by") @db.VarChar(72)
+  updatedBy         String?  @map("updated_by") @db.VarChar(72)
 
   history       OwnershipHistory[]
   transfers     Transfer[]
@@ -71,7 +71,7 @@ model OwnershipHistory {
   id               String   @id @default(uuid())
   propertyId       String   @map("property_id") @db.VarChar(50)
   sequenceNumber   Int      @map("sequence_number")
-  ownerAadhaarHash String   @map("owner_aadhaar_hash") @db.VarChar(64)
+  ownerAadhaarHash String   @map("owner_aadhaar_hash") @db.VarChar(72)
   ownerName        String   @map("owner_name") @db.VarChar(200)
   acquisitionType  String   @map("acquisition_type") @db.VarChar(20)
   acquisitionDate  DateTime @map("acquisition_date") @db.Date
@@ -92,9 +92,9 @@ model OwnershipHistory {
 model Transfer {
   transferId         String    @id @map("transfer_id") @db.VarChar(30)
   propertyId         String    @map("property_id") @db.VarChar(50)
-  sellerAadhaarHash  String    @map("seller_aadhaar_hash") @db.VarChar(64)
+  sellerAadhaarHash  String    @map("seller_aadhaar_hash") @db.VarChar(72)
   sellerName         String    @map("seller_name") @db.VarChar(200)
-  buyerAadhaarHash   String    @map("buyer_aadhaar_hash") @db.VarChar(64)
+  buyerAadhaarHash   String    @map("buyer_aadhaar_hash") @db.VarChar(72)
   buyerName          String    @map("buyer_name") @db.VarChar(200)
   saleAmountPaisa    BigInt    @map("sale_amount_paisa")
   circleRatePaisa    BigInt    @map("circle_rate_paisa")
@@ -107,7 +107,7 @@ model Transfer {
   witness2Signed     Boolean   @default(false) @map("witness2_signed")
   stampDutyReceiptHash String? @map("stamp_duty_receipt_hash") @db.VarChar(100)
   saleDeedCid        String?   @map("sale_deed_cid") @db.VarChar(100)
-  registeredBy       String    @map("registered_by") @db.VarChar(64)
+  registeredBy       String    @map("registered_by") @db.VarChar(72)
   fabricTxId         String?   @map("fabric_tx_id") @db.VarChar(100)
   coolingPeriodEnds  DateTime? @map("cooling_period_ends")
   objectionReason    String?   @map("objection_reason")
@@ -137,7 +137,7 @@ model Encumbrance {
   endDate           DateTime? @map("end_date") @db.Date
   createdAt         DateTime  @default(now()) @map("created_at")
   releasedAt        DateTime? @map("released_at")
-  createdBy         String?   @map("created_by") @db.VarChar(64)
+  createdBy         String?   @map("created_by") @db.VarChar(72)
 
   property LandRecord @relation(fields: [propertyId], references: [propertyId])
 
@@ -150,9 +150,9 @@ model Dispute {
   propertyId   String    @map("property_id") @db.VarChar(50)
   type         String    @db.VarChar(30)
   status       String    @default("FILED") @db.VarChar(30)
-  filedByHash  String    @map("filed_by_hash") @db.VarChar(64)
+  filedByHash  String    @map("filed_by_hash") @db.VarChar(72)
   filedByName  String?   @map("filed_by_name") @db.VarChar(200)
-  againstHash  String    @map("against_hash") @db.VarChar(64)
+  againstHash  String    @map("against_hash") @db.VarChar(72)
   againstName  String?   @map("against_name") @db.VarChar(200)
   courtName    String?   @map("court_name") @db.VarChar(200)
   caseNumber   String?   @map("case_number") @db.VarChar(50)
@@ -172,7 +172,7 @@ model Dispute {
 model AuditLog {
   id                String   @id @default(uuid())
   timestamp         DateTime @default(now())
-  actorAadhaarHash  String   @map("actor_aadhaar_hash") @db.VarChar(64)
+  actorAadhaarHash  String   @map("actor_aadhaar_hash") @db.VarChar(72)
   actorRole         String   @map("actor_role") @db.VarChar(30)
   actorIp           String   @map("actor_ip") @db.VarChar(45)
   actorUserAgent    String?  @map("actor_user_agent")
@@ -184,8 +184,8 @@ model AuditLog {
   newState          Json?    @map("new_state")
   fabricTxId        String?  @map("fabric_tx_id") @db.VarChar(100)
   algorandTxId      String?  @map("algorand_tx_id") @db.VarChar(100)
-  entryHash         String   @map("entry_hash") @db.VarChar(64)
-  previousEntryHash String   @map("previous_entry_hash") @db.VarChar(64)
+  entryHash         String   @map("entry_hash") @db.VarChar(72)
+  previousEntryHash String   @map("previous_entry_hash") @db.VarChar(72)
 
   @@index([timestamp(sort: Desc)])
   @@index([actorAadhaarHash, timestamp(sort: Desc)])
@@ -200,7 +200,7 @@ model AlgorandAnchor {
   channelId         String   @map("channel_id") @db.VarChar(50)
   fabricBlockStart  BigInt   @map("fabric_block_start")
   fabricBlockEnd    BigInt   @map("fabric_block_end")
-  stateRoot         String   @map("state_root") @db.VarChar(64)
+  stateRoot         String   @map("state_root") @db.VarChar(72)
   transactionCount  Int      @map("transaction_count")
   algorandTxId      String   @map("algorand_tx_id") @db.VarChar(100)
   algorandRound     BigInt   @map("algorand_round")
@@ -213,7 +213,7 @@ model AlgorandAnchor {
 
 model User {
   id                String    @id @db.VarChar(30)
-  aadhaarHash       String    @unique @map("aadhaar_hash") @db.VarChar(64)
+  aadhaarHash       String    @unique @map("aadhaar_hash") @db.VarChar(72)
   name              String    @db.VarChar(200)
   role              String    @default("citizen") @db.VarChar(30)
   stateCode         String?   @map("state_code") @db.VarChar(5)
