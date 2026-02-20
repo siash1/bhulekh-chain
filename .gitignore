@@ -77,8 +77,8 @@ blockchain/fabric/network/ca-client/
 
 # Fabric binaries (downloaded by install-fabric.sh)
 bin/
-config/
-builders/
+/config/
+/builders/
 install-fabric.sh
 
 # IPFS
@@ -92,6 +92,9 @@ dump.rdb
 
 # Prisma
 backend/prisma/migrations/**/migration_lock.toml
+
+# JWT keys (generated per environment)
+backend/keys/
 
 # Secrets (never commit)
 *.pem

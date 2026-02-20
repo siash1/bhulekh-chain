@@ -13,6 +13,7 @@ const envSchema = z.object({
   FABRIC_GATEWAY_PEER: z.string().min(1),
   FABRIC_CERT_PATH: z.string().min(1),
   FABRIC_TLS_CERT_PATH: z.string().min(1),
+  FABRIC_PEER_HOST_OVERRIDE: z.string().min(1).optional(),
 
   // --- Algorand ---
   ALGORAND_NETWORK: z.enum(['localnet', 'testnet', 'mainnet']),

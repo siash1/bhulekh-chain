@@ -64,7 +64,7 @@ class FabricService {
         config.FABRIC_GATEWAY_PEER,
         tlsCredentials,
         {
-          'grpc.ssl_target_name_override': config.FABRIC_GATEWAY_PEER.split(':')[0],
+          'grpc.ssl_target_name_override': config.FABRIC_PEER_HOST_OVERRIDE ?? config.FABRIC_GATEWAY_PEER.split(':')[0],
         },
       );
 
