@@ -229,8 +229,11 @@ INVOKE_RESULT=$(peer chaincode invoke \
 INVOKE_RC=$?
 set -e
 
+PROPERTY_ON_LEDGER=false
+
 if [ $INVOKE_RC -eq 0 ]; then
     pass "RegisterProperty invoke succeeded"
+    PROPERTY_ON_LEDGER=true
 
     # Wait for state to be committed
     sleep 2
@@ -379,6 +382,159 @@ EOJSON2
             pass "State boundary enforced: MH registrar rejected for DL property (STATE_MISMATCH)"
         elif [ $CROSS_RC -ne 0 ]; then
             # Any rejection is acceptable — the key is that it did NOT succeed
+            if echo "${CROSS_RESULT}" | grep -q "ACCESS_DENIED\|AUTHORIZATION_FAILED"; then
+                pass "State boundary enforced: cross-state registration rejected"
+            else
+                fail "Cross-state registration failed with unexpected error: ${CROSS_RESULT}"
+            fi
+        else
+            fail "Cross-state registration should have been rejected but succeeded"
+        fi
+    fi
+
+elif echo "${INVOKE_RESULT}" | grep -q "PROPERTY_EXISTS"; then
+    pass "RegisterProperty correctly reports property already exists (idempotent re-run)"
+    PROPERTY_ON_LEDGER=true
+
+    # -------------------------------------------------------------------------
+    # Test 3: Query back the previously registered property
+    # -------------------------------------------------------------------------
+    echo ""
+    echo "--- Test 3: Query registered property ---"
+
+    set +e
+    VERIFY_RESULT=$(peer chaincode query \
+        -C "${CHANNEL_NAME}" \
+        -n "${CC_NAME}" \
+        -c "{\"function\":\"GetProperty\",\"Args\":[\"${TEST_PROPERTY_ID}\"]}" \
+        2>&1)
+    VERIFY_RC=$?
+    set -e
+
+    if [ $VERIFY_RC -eq 0 ]; then
+        if echo "${VERIFY_RESULT}" | grep -q "${TEST_PROPERTY_ID}"; then
+            pass "GetProperty returns the registered property"
+        else
+            fail "GetProperty returned unexpected data: ${VERIFY_RESULT}"
+        fi
+
+        if echo "${VERIFY_RESULT}" | grep -q "Raj Kumar"; then
+            pass "Property has correct owner name"
+        else
+            warn "Owner name not found in query result"
+        fi
+
+        if echo "${VERIFY_RESULT}" | grep -q '"status":"ACTIVE"'; then
+            pass "Property status is ACTIVE"
+        else
+            warn "Could not verify property status"
+        fi
+    elif echo "${VERIFY_RESULT}" | grep -q "did not match schema"; then
+        warn "GetProperty returned schema validation error (property exists but response schema mismatch)"
+    else
+        fail "GetProperty query failed: ${VERIFY_RESULT}"
+    fi
+
+    # -------------------------------------------------------------------------
+    # Test 4: State boundary enforcement
+    # -------------------------------------------------------------------------
+    if [ "${HAS_CA_IDENTITIES}" = true ] && \
+       [ -d "${REGISTRAR2_MSP}/signcerts" ] && \
+       [ "$(ls -A "${REGISTRAR2_MSP}/signcerts" 2>/dev/null)" ]; then
+
+        echo ""
+        echo "--- Test 4: State boundary enforcement (registrar2/MH -> DL property) ---"
+
+        set_registrar2_env
+
+        TEST_CROSS_STATE_ID="DL-NDL-CNK-TST-999-0"
+
+        CROSS_STATE_JSON=$(cat <<EOJSON3
+{
+  "propertyId": "${TEST_CROSS_STATE_ID}",
+  "surveyNumber": "999",
+  "subSurveyNumber": "",
+  "location": {
+    "stateCode": "DL",
+    "stateName": "Delhi",
+    "districtCode": "NDL",
+    "districtName": "New Delhi",
+    "tehsilCode": "CNK",
+    "tehsilName": "Chanakyapuri",
+    "villageCode": "TST",
+    "villageName": "Test Village 2",
+    "pinCode": "110021"
+  },
+  "area": {
+    "value": 200.0,
+    "unit": "SQ_METERS",
+    "localValue": 0.049,
+    "localUnit": "ACRES"
+  },
+  "boundaries": {
+    "north": "Plot 998",
+    "south": "Side Road",
+    "east": "Plot 1000",
+    "west": "Garden",
+    "geoJson": {
+      "type": "Polygon",
+      "coordinates": [[[77.23, 28.63], [77.24, 28.63], [77.24, 28.64], [77.23, 28.64], [77.23, 28.63]]]
+    }
+  },
+  "currentOwner": {
+    "ownerType": "INDIVIDUAL",
+    "owners": [{
+      "aadhaarHash": "sha256:b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+      "name": "Suresh Patil",
+      "fatherName": "Ramesh Patil",
+      "sharePercentage": 100,
+      "isMinor": false
+    }],
+    "ownershipType": "FREEHOLD",
+    "acquisitionType": "PURCHASE",
+    "acquisitionDate": "2021-06-01"
+  },
+  "landUse": "RESIDENTIAL",
+  "landClassification": "URBAN",
+  "taxInfo": {
+    "annualLandRevenue": 300000,
+    "lastPaidDate": "2025-03-31",
+    "paidUpToYear": "2024-25"
+  },
+  "registrationInfo": {
+    "registrationNumber": "REG-DL-2021-005678",
+    "bookNumber": "BOOK-I-2021",
+    "subRegistrarOffice": "SRO New Delhi",
+    "registrationDate": "2021-06-01"
+  },
+  "provenance": {
+    "sequence": 1,
+    "mergedFrom": []
+  }
+}
+EOJSON3
+)
+
+        set +e
+        CROSS_RESULT=$(peer chaincode invoke \
+            -o "${ORDERER_ADDRESS}" \
+            -C "${CHANNEL_NAME}" \
+            -n "${CC_NAME}" \
+            -c "{\"function\":\"RegisterProperty\",\"Args\":[$(echo "${CROSS_STATE_JSON}" | jq -c . | jq -Rs .)]}" \
+            --tls \
+            --cafile "${ORDERER_CA}" \
+            --peerAddresses "localhost:7051" \
+            --tlsRootCertFiles "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt" \
+            --peerAddresses "localhost:9051" \
+            --tlsRootCertFiles "${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/peers/peer0.bank.bhulekhchain.dev/tls/ca.crt" \
+            --waitForEvent \
+            2>&1)
+        CROSS_RC=$?
+        set -e
+
+        if [ $CROSS_RC -ne 0 ] && echo "${CROSS_RESULT}" | grep -q "STATE_MISMATCH"; then
+            pass "State boundary enforced: MH registrar rejected for DL property (STATE_MISMATCH)"
+        elif [ $CROSS_RC -ne 0 ]; then
             if echo "${CROSS_RESULT}" | grep -q "ACCESS_DENIED\|AUTHORIZATION_FAILED"; then
                 pass "State boundary enforced: cross-state registration rejected"
             else
