@@ -39,6 +39,8 @@ coverage/
 
 # Go
 blockchain/fabric/chaincode/*/vendor/
+blockchain/fabric/chaincode/land-registry/land-registry
+blockchain/fabric/chaincode/stamp-duty/stamp-duty
 *.exe
 *.exe~
 *.dll
