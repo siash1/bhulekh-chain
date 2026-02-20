@@ -1,0 +1,41 @@
+# BhulekhChain Chaincode — Multi-stage Docker Build (CcaaS)
+# Builds the Go chaincode binary and runs it as a gRPC server.
+# The peer connects to this container instead of building chaincode itself.
+#
+# Build context must be the project root (bhulekh-chain/).
+# Usage: docker build -f infrastructure/docker/Dockerfile.chaincode \
+#          --build-arg CC_NAME=land-registry .
+
+# Stage 1: Build the chaincode binary
+FROM golang:1.21-alpine AS builder
+
+RUN apk add --no-cache git gcc musl-dev
+
+ARG CC_NAME=land-registry
+WORKDIR /chaincode
+
+COPY blockchain/fabric/chaincode/${CC_NAME}/go.mod \
+     blockchain/fabric/chaincode/${CC_NAME}/go.sum ./
+COPY blockchain/fabric/chaincode/${CC_NAME}/vendor ./vendor
+COPY blockchain/fabric/chaincode/${CC_NAME}/*.go ./
+
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o /chaincode-server .
+
+# Stage 2: Minimal runtime image
+FROM alpine:3.19
+
+RUN apk add --no-cache ca-certificates tini
+RUN addgroup -g 1001 -S chaincode && \
+    adduser -S chaincode -u 1001 -G chaincode
+
+COPY --from=builder /chaincode-server /usr/local/bin/chaincode-server
+
+USER chaincode
+
+ENV CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+ENV CORE_CHAINCODE_ID_NAME=""
+
+EXPOSE 9999
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/usr/local/bin/chaincode-server"]

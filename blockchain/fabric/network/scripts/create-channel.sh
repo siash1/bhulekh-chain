@@ -20,8 +20,11 @@ set -e
 CHANNEL_NAME="land-registry-channel"
 CHANNEL_ARTIFACTS_DIR="${PWD}/../channel-artifacts"
 CRYPTO_DIR="${PWD}/../crypto-material"
+
+# Fabric peer CLI requires core.yaml
+export FABRIC_CFG_PATH="${FABRIC_CFG_PATH:-$(cd "${PWD}/../../../.." && pwd)/config}"
 ORDERER_CA="${CRYPTO_DIR}/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp/tlscacerts/tlsca.orderer.bhulekhchain.dev-cert.pem"
-ORDERER_ADDRESS="orderer0.orderer.bhulekhchain.dev:7050"
+ORDERER_ADDRESS="localhost:7050"
 
 MAX_RETRY=5
 DELAY=3
@@ -34,7 +37,7 @@ set_revenue_peer0_env() {
     export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
     export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
-    export CORE_PEER_ADDRESS="peer0.revenue.bhulekhchain.dev:7051"
+    export CORE_PEER_ADDRESS="localhost:7051"
 }
 
 # -----------------------------------------------------------------------------

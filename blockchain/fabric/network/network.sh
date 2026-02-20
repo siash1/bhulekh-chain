@@ -19,8 +19,13 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 NETWORK_DIR="${SCRIPT_DIR}"
 SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
+
+# Add Fabric binaries to PATH and set config path
+export PATH="${PROJECT_ROOT}/bin:$PATH"
+export FABRIC_CFG_PATH="${PROJECT_ROOT}/config"
 CRYPTO_DIR="${NETWORK_DIR}/crypto-material"
 CHANNEL_ARTIFACTS_DIR="${NETWORK_DIR}/channel-artifacts"
 DOCKER_COMPOSE_DIR="${SCRIPT_DIR}/../../../infrastructure/docker"
@@ -87,6 +92,8 @@ generate_channel_artifacts() {
 
     mkdir -p "${CHANNEL_ARTIFACTS_DIR}"
 
+    # configtxgen needs FABRIC_CFG_PATH pointing to configtx.yaml location
+    local SAVED_CFG_PATH="${FABRIC_CFG_PATH}"
     export FABRIC_CFG_PATH="${NETWORK_DIR}"
 
     if [ ! -f "${CHANNEL_ARTIFACTS_DIR}/genesis.block" ]; then
@@ -108,6 +115,9 @@ generate_channel_artifacts() {
     else
         log_warn "channel.tx already exists. Skipping."
     fi
+
+    # Restore FABRIC_CFG_PATH for peer CLI (needs core.yaml)
+    export FABRIC_CFG_PATH="${SAVED_CFG_PATH}"
 }
 
 # -----------------------------------------------------------------------------

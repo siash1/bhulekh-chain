@@ -32,15 +32,15 @@ services:
       - ../../blockchain/fabric/network/crypto-material/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp:/var/hyperledger/orderer/msp
       - ../../blockchain/fabric/network/crypto-material/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls:/var/hyperledger/orderer/tls
     networks:
-      - bhulekh-net
+      bhulekh-net:
+        aliases:
+          - orderer0.orderer.bhulekhchain.dev
 
   peer0.revenue.bhulekhchain.dev:
     image: hyperledger/fabric-peer:2.5
     container_name: peer0.revenue.bhulekhchain.dev
     environment:
       - FABRIC_LOGGING_SPEC=INFO
-      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=bhulekh-net
       - CORE_PEER_ID=peer0.revenue.bhulekhchain.dev
       - CORE_PEER_ADDRESS=peer0.revenue.bhulekhchain.dev:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
@@ -64,7 +64,6 @@ services:
       - "7051:7051"
       - "9444:9444"
     volumes:
-      - /var/run/docker.sock:/host/var/run/docker.sock
       - ../../blockchain/fabric/network/crypto-material/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/msp:/etc/hyperledger/fabric/msp
       - ../../blockchain/fabric/network/crypto-material/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls:/etc/hyperledger/fabric/tls
     depends_on:
@@ -78,8 +77,6 @@ services:
     container_name: peer0.bank.bhulekhchain.dev
     environment:
       - FABRIC_LOGGING_SPEC=INFO
-      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=bhulekh-net
       - CORE_PEER_ID=peer0.bank.bhulekhchain.dev
       - CORE_PEER_ADDRESS=peer0.bank.bhulekhchain.dev:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
@@ -103,7 +100,6 @@ services:
       - "9051:9051"
       - "9445:9445"
     volumes:
-      - /var/run/docker.sock:/host/var/run/docker.sock
       - ../../blockchain/fabric/network/crypto-material/peerOrganizations/bank.bhulekhchain.dev/peers/peer0.bank.bhulekhchain.dev/msp:/etc/hyperledger/fabric/msp
       - ../../blockchain/fabric/network/crypto-material/peerOrganizations/bank.bhulekhchain.dev/peers/peer0.bank.bhulekhchain.dev/tls:/etc/hyperledger/fabric/tls
     depends_on:
@@ -111,6 +107,21 @@ services:
       - couchdb.bank
     networks:
       - bhulekh-net
+
+  cc-land-registry.bhulekhchain.dev:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.chaincode
+      args:
+        CC_NAME: land-registry
+    container_name: cc-land-registry.bhulekhchain.dev
+    environment:
+      - CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+      - CORE_CHAINCODE_ID_NAME=${CC_LAND_REGISTRY_PACKAGE_ID:-land-registry_1.0:placeholder}
+    networks:
+      bhulekh-net:
+        aliases:
+          - cc-land-registry.bhulekhchain.dev
 
   couchdb.revenue:
     image: couchdb:3.3

@@ -33,8 +33,11 @@ CC_RUNTIME_LANGUAGE="golang"
 
 CHANNEL_NAME="land-registry-channel"
 CRYPTO_DIR="${PWD}/../crypto-material"
+
+# Fabric peer CLI requires core.yaml
+export FABRIC_CFG_PATH="${FABRIC_CFG_PATH:-$(cd "${PWD}/../../../.." && pwd)/config}"
 ORDERER_CA="${CRYPTO_DIR}/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/msp/tlscacerts/tlsca.orderer.bhulekhchain.dev-cert.pem"
-ORDERER_ADDRESS="orderer0.orderer.bhulekhchain.dev:7050"
+ORDERER_ADDRESS="localhost:7050"
 
 CC_PKG_DIR="${PWD}/../channel-artifacts"
 CC_PKG_FILE="${CC_PKG_DIR}/${CC_NAME}_${CC_VERSION}.tar.gz"
@@ -55,7 +58,7 @@ set_peer0_revenue_env() {
     export CORE_PEER_LOCALMSPID="RevenueOrgMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt"
     export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/users/Admin@revenue.bhulekhchain.dev/msp"
-    export CORE_PEER_ADDRESS="peer0.revenue.bhulekhchain.dev:7051"
+    export CORE_PEER_ADDRESS="localhost:7051"
 }
 
 set_peer0_bank_env() {
@@ -63,7 +66,7 @@ set_peer0_bank_env() {
     export CORE_PEER_LOCALMSPID="BankOrgMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE="${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/peers/peer0.bank.bhulekhchain.dev/tls/ca.crt"
     export CORE_PEER_MSPCONFIGPATH="${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/users/Admin@bank.bhulekhchain.dev/msp"
-    export CORE_PEER_ADDRESS="peer0.bank.bhulekhchain.dev:9051"
+    export CORE_PEER_ADDRESS="localhost:9051"
 }
 
 # -----------------------------------------------------------------------------
@@ -258,9 +261,9 @@ commit_chaincode() {
         --sequence ${CC_SEQUENCE} \
         --tls \
         --cafile "${ORDERER_CA}" \
-        --peerAddresses "peer0.revenue.bhulekhchain.dev:7051" \
+        --peerAddresses "localhost:7051" \
         --tlsRootCertFiles "${CRYPTO_DIR}/peerOrganizations/revenue.bhulekhchain.dev/peers/peer0.revenue.bhulekhchain.dev/tls/ca.crt" \
-        --peerAddresses "peer0.bank.bhulekhchain.dev:9051" \
+        --peerAddresses "localhost:9051" \
         --tlsRootCertFiles "${CRYPTO_DIR}/peerOrganizations/bank.bhulekhchain.dev/peers/peer0.bank.bhulekhchain.dev/tls/ca.crt"
 
     echo ">>> New chaincode definition committed."

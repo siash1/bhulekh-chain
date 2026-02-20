@@ -74,6 +74,12 @@ docker-compose.override.yml
 blockchain/fabric/network/crypto-material/
 blockchain/fabric/network/channel-artifacts/
 
+# Fabric binaries (downloaded by install-fabric.sh)
+bin/
+config/
+builders/
+install-fabric.sh
+
 # IPFS
 ipfsdata/
 
