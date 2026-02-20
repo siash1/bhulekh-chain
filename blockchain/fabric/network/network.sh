@@ -28,7 +28,7 @@ export PATH="${PROJECT_ROOT}/bin:$PATH"
 export FABRIC_CFG_PATH="${PROJECT_ROOT}/config"
 CRYPTO_DIR="${NETWORK_DIR}/crypto-material"
 CHANNEL_ARTIFACTS_DIR="${NETWORK_DIR}/channel-artifacts"
-DOCKER_COMPOSE_DIR="${SCRIPT_DIR}/../../../infrastructure/docker"
+DOCKER_COMPOSE_DIR="${PROJECT_ROOT}/infrastructure/docker"
 DOCKER_COMPOSE_FILE="${DOCKER_COMPOSE_DIR}/docker-compose.dev.yaml"
 
 RED='\033[0;31m'
