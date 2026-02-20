@@ -121,7 +121,7 @@ class AnchoringService {
       });
 
       const result = await atc.execute(this.algodClient, 4);
-      const txId = result.txIDs[0];
+      const txId = result.txIDs[0]!;
       const confirmedRound = Number(result.confirmedRound);
 
       // Save anchor record to PostgreSQL
