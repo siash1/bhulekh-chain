@@ -224,16 +224,6 @@ func requireStateAccess(ctx contractapi.TransactionContextInterface, propertySta
 	return nil
 }
 
-// getCallerStateCode extracts the stateCode attribute from the caller's
-// X.509 certificate. Returns empty string if not found.
-func getCallerStateCode(ctx contractapi.TransactionContextInterface) string {
-	callerState, found, err := ctx.GetClientIdentity().GetAttributeValue("stateCode")
-	if err != nil || !found {
-		return ""
-	}
-	return callerState
-}
-
 // getCallerID extracts a human-readable identifier from the caller's
 // X.509 certificate for audit trail purposes. Combines role and stateCode.
 func getCallerID(ctx contractapi.TransactionContextInterface) string {

@@ -458,6 +458,15 @@ func (s *LandRegistryContract) InitiateTransfer(ctx contractapi.TransactionConte
 		return "", fmt.Errorf("TRANSFER_IN_PROGRESS: property %s already has an active transfer", transfer.PropertyID)
 	}
 
+	// Rule 6: Encumbrance check mandatory
+	hasEncumbrance, err := hasActiveEncumbrances(ctx, transfer.PropertyID)
+	if err != nil {
+		return "", fmt.Errorf("failed to check encumbrances: %v", err)
+	}
+	if hasEncumbrance {
+		return "", fmt.Errorf("LAND_ENCUMBERED: property %s has active encumbrances, cannot initiate transfer", transfer.PropertyID)
+	}
+
 	// Rule 5: No active cooling period
 	if property.CoolingPeriod.Active {
 		return "", fmt.Errorf("LAND_COOLING_PERIOD: property %s in cooling period until %s", transfer.PropertyID, property.CoolingPeriod.ExpiresAt)
