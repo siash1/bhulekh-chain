@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TransferForm from '@/components/TransferForm';
 import { useAuthStore } from '@/stores/auth.store';
 
-export default function TransferPage() {
+function TransferPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
@@ -88,5 +88,13 @@ export default function TransferPage() {
       {/* Transfer form */}
       <TransferForm preselectedPropertyId={preselectedPropertyId} />
     </div>
+  );
+}
+
+export default function TransferPage() {
+  return (
+    <Suspense fallback={<div className="page-container">Loading...</div>}>
+      <TransferPageContent />
+    </Suspense>
   );
 }
