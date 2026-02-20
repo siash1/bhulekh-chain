@@ -1,0 +1,24 @@
+{
+  "name": "bhulekh-chain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "National Blockchain Property Register for India",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:polygon": "cd blockchain/polygon && npx hardhat test",
+    "test:all": "npm run test:backend && npm run test:polygon",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:all": "npm run lint:backend && npm run lint:frontend",
+    "setup:dev": "bash infrastructure/scripts/setup-dev.sh"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

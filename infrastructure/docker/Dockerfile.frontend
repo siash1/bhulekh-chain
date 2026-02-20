@@ -1,0 +1,69 @@
+# BhulekhChain Frontend - Multi-stage Docker Build (Next.js)
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies
+RUN npm ci
+
+# Stage 2: Build Next.js application
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY frontend/package.json ./
+
+# Copy source code
+COPY frontend/src ./src
+COPY frontend/public ./public
+COPY frontend/next.config.js ./next.config.js
+COPY frontend/tsconfig.json ./tsconfig.json
+COPY frontend/tailwind.config.ts ./tailwind.config.ts
+COPY frontend/postcss.config.js ./postcss.config.js
+
+# Set Next.js to produce standalone output
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
+RUN npm run build
+
+# Stage 3: Production image with standalone output
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache curl tini
+
+# Create non-root user
+RUN addgroup -g 1001 -S bhulekh && \
+    adduser -S bhulekh -u 1001 -G bhulekh
+
+# Set environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Copy standalone output from builder
+COPY --from=builder --chown=bhulekh:bhulekh /app/.next/standalone ./
+COPY --from=builder --chown=bhulekh:bhulekh /app/.next/static ./.next/static
+COPY --from=builder --chown=bhulekh:bhulekh /app/public ./public
+
+# Expose frontend port
+EXPOSE 3000
+
+# Switch to non-root user
+USER bhulekh
+
+# Use tini as init process
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the Next.js standalone server
+CMD ["node", "server.js"]

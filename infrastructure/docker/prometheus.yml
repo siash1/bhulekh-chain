@@ -1,0 +1,103 @@
+# BhulekhChain Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+  external_labels:
+    cluster: "bhulekhchain-dev"
+    environment: "development"
+
+scrape_configs:
+  # BhulekhChain Backend API (Node.js)
+  - job_name: "bhulekh-backend"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["host.docker.internal:3001"]
+        labels:
+          service: "backend"
+          component: "api"
+
+  # Node.js process metrics (via prom-client)
+  - job_name: "nodejs-process"
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["host.docker.internal:3001"]
+        labels:
+          service: "backend"
+          component: "process"
+
+  # Hyperledger Fabric Peer - Revenue Org
+  - job_name: "fabric-peer-revenue"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["peer0.revenue.bhulekhchain.dev:9444"]
+        labels:
+          service: "fabric"
+          component: "peer"
+          organization: "revenue"
+
+  # Hyperledger Fabric Peer - Bank Org
+  - job_name: "fabric-peer-bank"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["peer0.bank.bhulekhchain.dev:9445"]
+        labels:
+          service: "fabric"
+          component: "peer"
+          organization: "bank"
+
+  # Hyperledger Fabric Orderer
+  - job_name: "fabric-orderer"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["orderer.bhulekhchain.dev:8443"]
+        labels:
+          service: "fabric"
+          component: "orderer"
+
+  # Redis Exporter
+  - job_name: "redis"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service: "redis"
+          component: "cache"
+
+  # PostgreSQL Exporter
+  - job_name: "postgresql"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service: "postgresql"
+          component: "database"
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "monitoring"
+          component: "prometheus"
+
+  # Keycloak metrics
+  - job_name: "keycloak"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["keycloak:8080"]
+        labels:
+          service: "auth"
+          component: "keycloak"
+
+  # Fabric CA metrics
+  - job_name: "fabric-ca-revenue"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["fabric-ca.revenue:17054"]
+        labels:
+          service: "fabric"
+          component: "ca"
+          organization: "revenue"

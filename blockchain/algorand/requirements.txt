@@ -1,0 +1,4 @@
+algorand-python>=2.0.0
+algokit-utils>=3.0.0
+pytest>=7.4.0
+pytest-asyncio>=0.21.0

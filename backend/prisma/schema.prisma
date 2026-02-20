@@ -1,0 +1,227 @@
+// prisma/schema.prisma
+// BhulekhChain — National Blockchain Property Register
+// PostgreSQL schema mirroring Fabric world state for fast querying
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model LandRecord {
+  propertyId        String   @id @map("property_id") @db.VarChar(50)
+  surveyNumber      String   @map("survey_number") @db.VarChar(20)
+  subSurveyNumber   String   @default("") @map("sub_survey_number") @db.VarChar(10)
+  stateCode         String   @map("state_code") @db.VarChar(5)
+  districtCode      String   @map("district_code") @db.VarChar(10)
+  tehsilCode        String   @map("tehsil_code") @db.VarChar(10)
+  villageCode       String   @map("village_code") @db.VarChar(10)
+  pinCode           String?  @map("pin_code") @db.VarChar(6)
+  areaSqMeters      Decimal  @map("area_sq_meters") @db.Decimal(15, 2)
+  areaLocalValue    Decimal? @map("area_local_value") @db.Decimal(10, 4)
+  areaLocalUnit     String?  @map("area_local_unit") @db.VarChar(20)
+  ownerAadhaarHash  String   @map("owner_aadhaar_hash") @db.VarChar(64)
+  ownerName         String   @map("owner_name") @db.VarChar(200)
+  ownerFatherName   String?  @map("owner_father_name") @db.VarChar(200)
+  ownershipType     String   @default("FREEHOLD") @map("ownership_type") @db.VarChar(20)
+  acquisitionType   String   @map("acquisition_type") @db.VarChar(20)
+  acquisitionDate   DateTime @map("acquisition_date") @db.Date
+  landUse           String   @map("land_use") @db.VarChar(30)
+  landClassification String? @map("land_classification") @db.VarChar(30)
+  status            String   @default("ACTIVE") @db.VarChar(30)
+  disputeStatus     String   @default("CLEAR") @map("dispute_status") @db.VarChar(30)
+  encumbranceStatus String   @default("CLEAR") @map("encumbrance_status") @db.VarChar(30)
+  coolingPeriodEnds DateTime? @map("cooling_period_ends")
+  registrationNumber String? @map("registration_number") @db.VarChar(50)
+  subRegistrarOffice String? @map("sub_registrar_office") @db.VarChar(100)
+  registrationDate  DateTime? @map("registration_date") @db.Date
+  fabricTxId        String?  @map("fabric_tx_id") @db.VarChar(100)
+  algorandAsaId     BigInt?  @map("algorand_asa_id")
+  algorandLastAnchor String? @map("algorand_last_anchor") @db.VarChar(100)
+  polygonTokenId    String?  @map("polygon_token_id") @db.VarChar(100)
+  polygonContract   String?  @map("polygon_contract") @db.VarChar(42)
+  annualLandRevenue BigInt   @default(0) @map("annual_land_revenue")
+  taxPaidUpTo       String?  @map("tax_paid_up_to") @db.VarChar(20)
+  documentCid       String?  @map("document_cid") @db.VarChar(100)
+  provenanceSequence Int     @default(1) @map("provenance_sequence")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdBy         String?  @map("created_by") @db.VarChar(64)
+  updatedBy         String?  @map("updated_by") @db.VarChar(64)
+
+  history       OwnershipHistory[]
+  transfers     Transfer[]
+  encumbrances  Encumbrance[]
+  disputes      Dispute[]
+
+  @@index([stateCode, districtCode])
+  @@index([ownerAadhaarHash])
+  @@index([surveyNumber, villageCode])
+  @@index([status, disputeStatus, encumbranceStatus])
+  @@index([updatedAt(sort: Desc)])
+  @@map("land_records")
+}
+
+model OwnershipHistory {
+  id               String   @id @default(uuid())
+  propertyId       String   @map("property_id") @db.VarChar(50)
+  sequenceNumber   Int      @map("sequence_number")
+  ownerAadhaarHash String   @map("owner_aadhaar_hash") @db.VarChar(64)
+  ownerName        String   @map("owner_name") @db.VarChar(200)
+  acquisitionType  String   @map("acquisition_type") @db.VarChar(20)
+  acquisitionDate  DateTime @map("acquisition_date") @db.Date
+  saleAmountPaisa  BigInt?  @map("sale_amount_paisa")
+  stampDutyPaisa   BigInt?  @map("stamp_duty_paisa")
+  documentCid      String?  @map("document_cid") @db.VarChar(100)
+  fabricTxId       String   @map("fabric_tx_id") @db.VarChar(100)
+  algorandTxId     String?  @map("algorand_tx_id") @db.VarChar(100)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  property LandRecord @relation(fields: [propertyId], references: [propertyId])
+
+  @@unique([propertyId, sequenceNumber])
+  @@index([propertyId, sequenceNumber])
+  @@map("ownership_history")
+}
+
+model Transfer {
+  transferId         String    @id @map("transfer_id") @db.VarChar(30)
+  propertyId         String    @map("property_id") @db.VarChar(50)
+  sellerAadhaarHash  String    @map("seller_aadhaar_hash") @db.VarChar(64)
+  sellerName         String    @map("seller_name") @db.VarChar(200)
+  buyerAadhaarHash   String    @map("buyer_aadhaar_hash") @db.VarChar(64)
+  buyerName          String    @map("buyer_name") @db.VarChar(200)
+  saleAmountPaisa    BigInt    @map("sale_amount_paisa")
+  circleRatePaisa    BigInt    @map("circle_rate_paisa")
+  stampDutyPaisa     BigInt    @map("stamp_duty_paisa")
+  registrationFeePaisa BigInt  @map("registration_fee_paisa")
+  status             String    @db.VarChar(40)
+  sellerSigned       Boolean   @default(false) @map("seller_signed")
+  buyerSigned        Boolean   @default(false) @map("buyer_signed")
+  witness1Signed     Boolean   @default(false) @map("witness1_signed")
+  witness2Signed     Boolean   @default(false) @map("witness2_signed")
+  stampDutyReceiptHash String? @map("stamp_duty_receipt_hash") @db.VarChar(100)
+  saleDeedCid        String?   @map("sale_deed_cid") @db.VarChar(100)
+  registeredBy       String    @map("registered_by") @db.VarChar(64)
+  fabricTxId         String?   @map("fabric_tx_id") @db.VarChar(100)
+  coolingPeriodEnds  DateTime? @map("cooling_period_ends")
+  objectionReason    String?   @map("objection_reason")
+  objectionDocHash   String?   @map("objection_doc_hash") @db.VarChar(100)
+  cancelReason       String?   @map("cancel_reason")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  property LandRecord @relation(fields: [propertyId], references: [propertyId])
+
+  @@index([propertyId])
+  @@index([status])
+  @@map("transfers")
+}
+
+model Encumbrance {
+  encumbranceId     String    @id @map("encumbrance_id") @db.VarChar(30)
+  propertyId        String    @map("property_id") @db.VarChar(50)
+  type              String    @db.VarChar(20)
+  status            String    @default("ACTIVE") @db.VarChar(20)
+  institutionName   String    @map("institution_name") @db.VarChar(200)
+  branchCode        String?   @map("branch_code") @db.VarChar(50)
+  loanAccountNumber String?   @map("loan_account_number") @db.VarChar(50)
+  amountPaisa       BigInt    @map("amount_paisa")
+  outstandingPaisa  BigInt?   @map("outstanding_paisa")
+  startDate         DateTime  @map("start_date") @db.Date
+  endDate           DateTime? @map("end_date") @db.Date
+  createdAt         DateTime  @default(now()) @map("created_at")
+  releasedAt        DateTime? @map("released_at")
+  createdBy         String?   @map("created_by") @db.VarChar(64)
+
+  property LandRecord @relation(fields: [propertyId], references: [propertyId])
+
+  @@index([propertyId, status])
+  @@map("encumbrances")
+}
+
+model Dispute {
+  disputeId    String    @id @map("dispute_id") @db.VarChar(30)
+  propertyId   String    @map("property_id") @db.VarChar(50)
+  type         String    @db.VarChar(30)
+  status       String    @default("FILED") @db.VarChar(30)
+  filedByHash  String    @map("filed_by_hash") @db.VarChar(64)
+  filedByName  String?   @map("filed_by_name") @db.VarChar(200)
+  againstHash  String    @map("against_hash") @db.VarChar(64)
+  againstName  String?   @map("against_name") @db.VarChar(200)
+  courtName    String?   @map("court_name") @db.VarChar(200)
+  caseNumber   String?   @map("case_number") @db.VarChar(50)
+  description  String?
+  filedDate    DateTime  @map("filed_date") @db.Date
+  resolvedAt   DateTime? @map("resolved_at")
+  resolution   String?
+  fabricTxId   String?   @map("fabric_tx_id") @db.VarChar(100)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  property LandRecord @relation(fields: [propertyId], references: [propertyId])
+
+  @@index([propertyId, status])
+  @@map("disputes")
+}
+
+model AuditLog {
+  id                String   @id @default(uuid())
+  timestamp         DateTime @default(now())
+  actorAadhaarHash  String   @map("actor_aadhaar_hash") @db.VarChar(64)
+  actorRole         String   @map("actor_role") @db.VarChar(30)
+  actorIp           String   @map("actor_ip") @db.VarChar(45)
+  actorUserAgent    String?  @map("actor_user_agent")
+  action            String   @db.VarChar(50)
+  resourceType      String   @map("resource_type") @db.VarChar(30)
+  resourceId        String   @map("resource_id") @db.VarChar(50)
+  stateCode         String?  @map("state_code") @db.VarChar(5)
+  previousState     Json?    @map("previous_state")
+  newState          Json?    @map("new_state")
+  fabricTxId        String?  @map("fabric_tx_id") @db.VarChar(100)
+  algorandTxId      String?  @map("algorand_tx_id") @db.VarChar(100)
+  entryHash         String   @map("entry_hash") @db.VarChar(64)
+  previousEntryHash String   @map("previous_entry_hash") @db.VarChar(64)
+
+  @@index([timestamp(sort: Desc)])
+  @@index([actorAadhaarHash, timestamp(sort: Desc)])
+  @@index([resourceId, timestamp(sort: Desc)])
+  @@index([action, timestamp(sort: Desc)])
+  @@map("audit_log")
+}
+
+model AlgorandAnchor {
+  anchorId          String   @id @map("anchor_id") @db.VarChar(30)
+  stateCode         String   @map("state_code") @db.VarChar(5)
+  channelId         String   @map("channel_id") @db.VarChar(50)
+  fabricBlockStart  BigInt   @map("fabric_block_start")
+  fabricBlockEnd    BigInt   @map("fabric_block_end")
+  stateRoot         String   @map("state_root") @db.VarChar(64)
+  transactionCount  Int      @map("transaction_count")
+  algorandTxId      String   @map("algorand_tx_id") @db.VarChar(100)
+  algorandRound     BigInt   @map("algorand_round")
+  anchoredAt        DateTime @map("anchored_at")
+  verified          Boolean  @default(false)
+
+  @@index([stateCode, anchoredAt(sort: Desc)])
+  @@map("algorand_anchors")
+}
+
+model User {
+  id                String    @id @db.VarChar(30)
+  aadhaarHash       String    @unique @map("aadhaar_hash") @db.VarChar(64)
+  name              String    @db.VarChar(200)
+  role              String    @default("citizen") @db.VarChar(30)
+  stateCode         String?   @map("state_code") @db.VarChar(5)
+  districtCode      String?   @map("district_code") @db.VarChar(10)
+  fabricMspEnrolled Boolean   @default(false) @map("fabric_msp_enrolled")
+  lastLoginAt       DateTime? @map("last_login_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([aadhaarHash])
+  @@map("users")
+}

@@ -1,0 +1,203 @@
+# =============================================================================
+# BhulekhChain — Hyperledger Fabric Channel Configuration (configtx.yaml)
+# =============================================================================
+# Defines organizations, orderer settings, channel profiles, and capabilities
+# for the BhulekhChain land registry network.
+#
+# Usage:
+#   configtxgen -profile TwoOrgOrdererGenesis -channelID system-channel \
+#     -outputBlock ./channel-artifacts/genesis.block
+#   configtxgen -profile LandRegistryChannel -channelID land-registry-channel \
+#     -outputCreateChannelTx ./channel-artifacts/channel.tx
+# =============================================================================
+
+---
+
+# =============================================================================
+# Organizations
+# =============================================================================
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer0.orderer.bhulekhchain.dev:7050
+
+  - &RevenueOrg
+    Name: RevenueOrgMSP
+    ID: RevenueOrgMSP
+    MSPDir: ../organizations/peerOrganizations/revenue.bhulekhchain.dev/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('RevenueOrgMSP.admin', 'RevenueOrgMSP.peer', 'RevenueOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('RevenueOrgMSP.admin', 'RevenueOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('RevenueOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('RevenueOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.revenue.bhulekhchain.dev
+        Port: 7051
+
+  - &BankOrg
+    Name: BankOrgMSP
+    ID: BankOrgMSP
+    MSPDir: ../organizations/peerOrganizations/bank.bhulekhchain.dev/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('BankOrgMSP.admin', 'BankOrgMSP.peer', 'BankOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('BankOrgMSP.admin', 'BankOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('BankOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('BankOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.bank.bhulekhchain.dev
+        Port: 9051
+
+# =============================================================================
+# Capabilities — Feature gates for network compatibility
+# =============================================================================
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+
+  Orderer: &OrdererCapabilities
+    V2_0: true
+
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+# =============================================================================
+# Application — Defaults for the application section of channel config
+# =============================================================================
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+# =============================================================================
+# Orderer — Raft consensus configuration
+# =============================================================================
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer0.orderer.bhulekhchain.dev:7050
+
+  # Raft consensus settings
+  EtcdRaft:
+    Consenters:
+      - Host: orderer0.orderer.bhulekhchain.dev
+        Port: 7050
+        ClientTLSCert: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/orderer.bhulekhchain.dev/orderers/orderer0.orderer.bhulekhchain.dev/tls/server.crt
+
+  # Block cutting parameters
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 100
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+# =============================================================================
+# Channel — Default channel-level policies
+# =============================================================================
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+# =============================================================================
+# Profiles — Genesis block and channel creation templates
+# =============================================================================
+Profiles:
+
+  # System channel genesis block (orderer bootstrap)
+  TwoOrgOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      BhulekhChainConsortium:
+        Organizations:
+          - *RevenueOrg
+          - *BankOrg
+
+  # Application channel for land registry operations
+  LandRegistryChannel:
+    Consortium: BhulekhChainConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *RevenueOrg
+        - *BankOrg
+      Capabilities:
+        <<: *ApplicationCapabilities

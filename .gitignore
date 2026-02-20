@@ -1,0 +1,94 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.js.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Go
+blockchain/fabric/chaincode/*/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+ENV/
+.pytest_cache/
+.mypy_cache/
+
+# Solidity / Hardhat
+blockchain/polygon/artifacts/
+blockchain/polygon/cache/
+blockchain/polygon/typechain-types/
+
+# Docker
+docker-compose.override.yml
+
+# Fabric crypto material (generated)
+blockchain/fabric/network/crypto-material/
+blockchain/fabric/network/channel-artifacts/
+
+# IPFS
+ipfsdata/
+
+# PostgreSQL
+pgdata/
+
+# Redis
+dump.rdb
+
+# Prisma
+backend/prisma/migrations/**/migration_lock.toml
+
+# Secrets (never commit)
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+credentials.json
+secrets.json
